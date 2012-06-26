@@ -9,10 +9,10 @@ class SimpleDataStore:
     filename = None
     db = None
 
-    strCreateTable = """CREATE TABLE %s(user_id integer, user_name text, follower_num integer, 
+    strCreateTable = """CREATE TABLE %s(user_id integer, screen_name text, user_name text, follower_num integer, 
                                         follower_id text, follower_pos text, 
                                         UNIQUE(user_id))"""
-    strInsertValue = """INSERT INTO %s VALUES(?, ?, ?, ?, ?)"""
+    strInsertValue = """INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?)"""
     strSelectByID  = """SELECT * From %s WHERE user_id = %d"""
     strSelectAllID = """SELECT user_id FROM %s"""
 
@@ -26,10 +26,10 @@ class SimpleDataStore:
             c.close()
 
 
-    def store(self, userName, userID, followerID, followerPos):
+    def store(self, userID, screenName, userName, followerID, followerPos):
         followerNum = len(followerID)
         c = self.db.cursor()
-        c.execute(self.strInsertValue%(self._dbName), (userID, userName, followerNum, json.dumps(followerID), json.dumps(followerPos)))
+        c.execute(self.strInsertValue%(self._dbName), (userID, screenName, userName, followerNum, json.dumps(followerID), json.dumps(followerPos)))
 
         # To improve efficiency, the commit function should be used in a batched way
         self.db.commit()
@@ -41,7 +41,7 @@ class SimpleDataStore:
         rows = c.fetchall()
         res = []
         for row in rows:
-            res.append((int(row[0]), row[1], int(row[2]), json.loads(row[3]), json.loads(row[4])))
+            res.append((int(row[0]), row[1], row[2], int(row[3]), json.loads(row[4]), json.loads(row[5])))
 
         return res
 
@@ -69,11 +69,11 @@ def main():
     dbName = 'test.db'
     #Create a SimpleDataStore object. True means this call will create a new database, one error will raise if the database already exists.
     simpleDataStore = SimpleDataStore(dbName, True)
-    tmpData = TwitterData('uiuc', 1826, [19, 23, 25, 668], [[0, 0], [90, 48], [100, 150], [30, 15]]);
+    tmpData = TwitterData(1826, 'screenuiuc', 'uiuc',  [19, 23, 25, 668], [[0, 0], [90, 48], [100, 150], [30, 15]]);
     #Store the data of one user. The parameters are (userName(string), userID(int), followerID(int list), followerPos(int list, each element is a list with two elements, namely x, and y coordination))
-    simpleDataStore.store(tmpData.userName, tmpData.userID, json.dumps(tmpData.followerID), json.dumps(tmpData.followerPos))
-    tmpData = TwitterData('umich', 1829, [19, 23, 25, 668, 890], [[5, 5], [90, 48], [100, 150], [30, 15]]) 
-    simpleDataStore.store(tmpData.userName, tmpData.userID, json.dumps(tmpData.followerID), json.dumps(tmpData.followerPos))
+    simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.userName, json.dumps(tmpData.followerID), json.dumps(tmpData.followerPos))
+    tmpData = TwitterData(1829, 'screenumich', 'umich', [19, 23, 25, 668, 890], [[5, 5], [90, 48], [100, 150], [30, 15]]) 
+    simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.userName, json.dumps(tmpData.followerID), json.dumps(tmpData.followerPos))
     #Close the db connection when you do not need it any more
     simpleDataStore.close()
 

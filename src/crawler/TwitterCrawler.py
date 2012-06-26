@@ -6,7 +6,7 @@ class Crawler:
     #you can specify other parameters (as described in the Twitter API page, e.g., user_id)
     urlGetFollowerID = "https://api.twitter.com/1/followers/ids.json?cursor=%d&screen_name=%s"    
 
-    def get_one_user(self, userID):
+    def get_one_user(self, screenName):
         pass
 
     def get_one_user_piece(self, screenName, cursor = -1):
