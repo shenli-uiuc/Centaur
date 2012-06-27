@@ -158,7 +158,7 @@ class Vertex:
 def main():
     nodeGenerator = NodeGenerator()
     coors = nodeGenerator.gen(10, 100) 
-    tree = DHTree(2, 7, math.pi * 2, coors)
+    tree = DHTree(2, 7, math.pi / 3, coors)
     index = range(len(coors))
     tree.build_tree(index, begin = 0, end = len(index), r = tree.V[0])
     #tree.print_tree()
