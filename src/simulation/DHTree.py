@@ -50,7 +50,12 @@ class DHTree:
             u = self.V[index[i]]
             u.angle = self.get_angle(u.x, u.y, r.x, r.y)
 
-        index[begin:end] = sorted(index[begin:end], key = lambda i: self.V[i])
+        index[begin:end] = sorted(index[begin:end], key = lambda i: self.V[i].angle)
+
+        #for i in index:
+        #    print self.V[i].angle
+
+        #exit(0)
 
         tmpAngle = 0
         cnt = 0
