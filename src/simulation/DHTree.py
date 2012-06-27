@@ -2,6 +2,7 @@ from NodeGenerator import NodeGenerator
 import math
 import simplejson as json
 
+
 class DHTree:
 
     INFTY = 999999999
@@ -23,27 +24,33 @@ class DHTree:
         self._init_tree_sizes()
 
     def _init_vertices(self, coors):
+        cnt = 0
         for coor in coors:
-            curV = Vertex(coor[0], coor[1])
+            curV = Vertex(cnt, coor[0], coor[1])
             self.V.append(curV)
+            cnt += 1
 
     def _init_tree_sizes(self):
         for i in range(self.h + 1):
             self.treeSizes.append((self.d ** i - 1) / (self.d - 1))
 
-    def build_tree(self, index, begin, end, r, curH):
+    def build_tree(self, index, begin, end, r, curH = 'root'):
+        r.used = True
+        #print (begin, end, r, curH)
+        if 'root' == curH:
+            curH = self.h
         if curH <= 2:
+            #print "in curH <= 2"
             for i in range(begin, end):
-                if self.V[index[i]] == r:
-                    continue
-                r.cList.append(index[i])
+                if not self.V[index[i]].used:
+                    r.cList.append(index[i])
             return
 
         for i in range(begin, end):
             u = self.V[index[i]]
             u.angle = self.get_angle(u.x, u.y, r.x, r.y)
 
-        index[begin:end] = sorted(index[begin:end], key = _comp)
+        index[begin:end] = sorted(index[begin:end], key = lambda i: self.V[i])
 
         tmpAngle = 0
         cnt = 0
@@ -51,9 +58,9 @@ class DHTree:
         cd = self.INFTY
         for i in range(begin, end):
             u = self.V[index[i]]
-            if u == r:
+            if u.used and i + 1 < end:
                 continue
-            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH]:
+            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH] or i + 1 == end:
                 r.cList.append(cv)
                 self.build_tree(index, i - cnt, i + 1, self.V[cv], curH - 1)
                 tmpAngle = u.angle
@@ -67,8 +74,8 @@ class DHTree:
                 cnt += 1
 
 
-    def _comp(self, a, b):
-        return V[a].angle < V[b].angle
+    def _comp(a, b):
+        return self.V[a].angle < self.V[b].angle
 
 
     def get_dist(self, x1, y1, x2, y2):
@@ -92,25 +99,66 @@ class DHTree:
 
         return angle
 
+    def print_tree(self):
+        print len(self.V)
+        for v in self.V:
+            print v
+        for v in self.V:
+            v.print_edges()
+
+    def store_vertices(self, filename, append = False):
+        if append:
+            f = open(filename, 'a')
+        else:
+            f = open(filename, 'w')
+        for v in self.V:
+            f.write("%s\n"%(v))
+        f.close()
+
+    def store_edges(self, filename, append = False):
+        if append:
+            f = open(filename, 'a')
+        else:
+            f = open(filename, 'w')
+
+        for v in self.V:
+            for c in v.cList:
+                f.write("%d %d\n"%(v.id, c))
+        f.close()
+
 class Vertex:
+    id = 0
     x = 0
     y = 0
     angle = 0
     cList = []
+    used = False
 
-    def __init__(self, x, y):
+    def __init__(self, id, x, y):
+        self.id = id
         self.x = x
         self.y = y
         self.cList = []
 
+    def __repr__(self):
+        return self.__str__()
+
     def __str__(self):
-        return json.dumps((x, y, angle, cList))    
+        return '%d %f %f'%(self.id, self.x, self.y)    
+
+    def print_edges(self):
+        for i in self.cList:
+            print '%d %d'%(self.id, i)
 
 def main():
     nodeGenerator = NodeGenerator()
     coors = nodeGenerator.gen(10, 100) 
     tree = DHTree(2, 7, math.pi * 2, coors)
-    print tree.V
+    index = range(len(coors))
+    tree.build_tree(index, begin = 0, end = len(index), r = tree.V[0])
+    #tree.print_tree()
+    tree.store_vertices('vertices')
+    tree.store_edges('edges')
 
 if __name__ == "__main__":
     main()
