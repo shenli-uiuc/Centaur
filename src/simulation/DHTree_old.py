@@ -34,21 +34,20 @@ class DHTree:
         for i in range(self.h + 1):
             self.treeSizes.append((self.d ** i - 1) / (self.d - 1))
 
-    def build_tree(self, index, r, curH = 'root'):
-        indLen = len(index)
+    def build_tree(self, index, begin, end, r, curH = 'root'):
         r.used = True
         #print (begin, end, r, curH)
         if 'root' == curH:
             curH = self.h
         if curH <= 2:
             #print "in curH <= 2"
-            for i in range(indLen):
+            for i in range(begin, end):
                 if not self.V[index[i]].used:
                     self.V[index[i]].used = True
                     r.cList.append(index[i])
             return
 
-        for i in range(indLen)):
+        for i in range(begin, end):
             u = self.V[index[i]]
             u.angle = self.get_angle(u.x, u.y, r.x, r.y)
 
@@ -63,22 +62,17 @@ class DHTree:
         cnt = 0
         cv = index[begin]
         cd = self.INFTY
-        curIndex = []
         for i in range(begin, end):
             u = self.V[index[i]]
-            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH] or i + 1 >= end:
-                if i + 1 >= end and u.angle - tmpAngle < self.alpha and cnt < self.treeSizes[curH]:
-                    curIndex.append(index[i])
+            if u.used and i + 1 < end:
+                continue
+            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH] or i + 1 == end:
                 r.cList.append(cv)
-                self.build_tree(index, curIndex,  self.V[cv], curH - 1)
+                self.build_tree(index, i - cnt, i + 1, self.V[cv], curH - 1)
                 tmpAngle = u.angle
                 cnt = 0
                 cd = self.INFTY
-                curIndex = []
-
-
-            if not u.used:
-                curIndex.append(index[i])
+            else:
                 tmpD = self.get_dist(u.x, u.y, r.x, r.y)
                 if tmpD < cd:
                     cd = tmpD
@@ -168,7 +162,7 @@ def main():
     coors = nodeGenerator.gen(10, 100) 
     tree = DHTree(2, 7, math.pi / 3, coors)
     index = range(len(coors))
-    tree.build_tree(index, r = tree.V[0])
+    tree.build_tree(index, begin = 0, end = len(index), r = tree.V[0])
     tree.print_tree()
     tree.store_vertices('vertices')
     tree.store_edges('edges')
