@@ -1,0 +1,5 @@
+usr = 'twitter'
+pwd = 'twitter'
+host = 'tarekc07.cs.uiuc.edu'
+dbName = 'twitter_db'
+tableName = 'twitter_data'
