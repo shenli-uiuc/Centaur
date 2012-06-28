@@ -35,24 +35,24 @@ class DHTree:
             self.treeSizes.append((self.d ** i - 1) / (self.d - 1))
 
     def build_tree(self, index, r, curH = 'root'):
-        indLen = len(index)
+        indexLen = len(index)
         r.used = True
         #print (begin, end, r, curH)
         if 'root' == curH:
             curH = self.h
         if curH <= 2:
             #print "in curH <= 2"
-            for i in range(indLen):
+            for i in range(indexLen):
                 if not self.V[index[i]].used:
                     self.V[index[i]].used = True
                     r.cList.append(index[i])
             return
 
-        for i in range(indLen)):
+        for i in range(indexLen):
             u = self.V[index[i]]
             u.angle = self.get_angle(u.x, u.y, r.x, r.y)
 
-        index[begin:end] = sorted(index[begin:end], key = lambda i: self.V[i].angle)
+        index.sort(key = lambda i: self.V[i].angle)
         """
         for i in index:
             print (i, self.V[i].x, self.V[i].y, self.V[i].angle)
@@ -61,20 +61,21 @@ class DHTree:
         """
         tmpAngle = 0
         cnt = 0
-        cv = index[begin]
+        cv = index[0]
         cd = self.INFTY
         curIndex = []
-        for i in range(begin, end):
+        for i in range(indexLen):
             u = self.V[index[i]]
-            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH] or i + 1 >= end:
-                if i + 1 >= end and u.angle - tmpAngle < self.alpha and cnt < self.treeSizes[curH]:
+            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH] or i + 1 >= indexLen:
+                if i + 1 >= indexLen and u.angle - tmpAngle < self.alpha and cnt < self.treeSizes[curH]:
                     curIndex.append(index[i])
-                r.cList.append(cv)
-                self.build_tree(index, curIndex,  self.V[cv], curH - 1)
-                tmpAngle = u.angle
-                cnt = 0
-                cd = self.INFTY
-                curIndex = []
+                elif len(curIndex):
+                    r.cList.append(cv)
+                    self.build_tree(curIndex,  self.V[cv], curH - 1)
+                    tmpAngle = u.angle
+                    cnt = 0
+                    cd = self.INFTY
+                    curIndex = []
 
 
             if not u.used:
@@ -108,7 +109,7 @@ class DHTree:
             angle += math.pi
         if x1 < x2:
             angle += math.pi
-        print angle
+        #print angle
 
         return angle
 
