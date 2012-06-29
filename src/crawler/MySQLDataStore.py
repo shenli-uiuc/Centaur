@@ -10,7 +10,8 @@ class MySQLDataStore:
     filename = None
     db = None
 
-    strInsert2Follower = """INSERT INTO %s VALUES()"""
+    strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
+    strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strSelectByID  = """SELECT * From %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
@@ -19,7 +20,6 @@ class MySQLDataStore:
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName)
 
     def store(self, userID, screenName, followerID, location):
-        followerNum = len(followerID)
         c = self.db.cursor()
         c.execute(self.strInsert2Data%(db_conf.dataTable, userID, screenName, json.dumps(followerID), location))
 
@@ -27,9 +27,22 @@ class MySQLDataStore:
         self.db.commit()
         c.close()
 
-    def store_followers_piece(self, userID, pCursor, nCursor, followerID):
+    def store_follower_piece(self, userID, pCursor, nCursor, followerID):
+        c = self.db.cursor()
+        c.execute(self.strInsert2Follower%(db_conf.followerTable, userID, pCursor, nCursor, json.dumps(followerID)))
+        self.db.commit()
+        c.close() 
         
-        
+    def store_user(self, userID, screenName, followerNum, location):
+        c = self.db.cursor()
+        print location
+        location.replace("'", "_")
+        print location
+        cmd = self.strInsert2User%(db_conf.userTable, userID, screenName, followerNum, location)
+        print cmd
+        c.execute(cmd)
+        self.db.commit()
+        c.close()
 
     def get_one_user(self, userID):
         c = self.db.cursor()
@@ -66,12 +79,19 @@ def main():
     dbName = 'test.db'
     #Create a MySQLDataStore object. True means this call will create a new database, one error will raise if the database already exists.
     simpleDataStore = MySQLDataStore()
-    tmpData = MySQLTwitterData(1826, 'uiuc',  [19, 23, 25, 668], 'Champaign');
+    #tmpData = MySQLTwitterData(1826, 'uiuc',  [19, 23, 25, 668], 'Champaign');
     #Store the data of one user. The parameters are (userName(string), userID(int), followerID(int list), followerPos(int list, each element is a list with two elements, namely x, and y coordination))
-    simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.followerID, tmpData.location)
-    tmpData = MySQLTwitterData(1829, 'umich', [19, 23, 25, 668, 890], 'Michigan') 
-    simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.followerID, tmpData.location)
+    #simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.followerID, tmpData.location)
+    #tmpData = MySQLTwitterData(1829, 'umich', [19, 23, 25, 668, 890], 'Michigan') 
+    #simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.followerID, tmpData.location)
     #Close the db connection when you do not need it any more
+
+    simpleDataStore.store_follower_piece(100, 0, 3, [0, 1, 2])
+    simpleDataStore.store_follower_piece(100, 3, 7, [3, 4, 5, 6])
+
+    simpleDataStore.store_user(0, 'test1', 10, 'Beijing, China')
+    simpleDataStore.store_user(1, 'test2', 15, 'Shanghai, China')
+
     simpleDataStore.close()
 
     #test read
