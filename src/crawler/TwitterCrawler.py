@@ -3,8 +3,13 @@ import simplejson as json
 import time
 import os
 import re
+import sys
+from MySQLDataStore import MySQLDataStore
 
 class Crawler:
+    
+    logFile = None 
+    db = None
 
     urlGetFollowerID = "https://api.twitter.com/1/followers/ids.json?cursor=%d&screen_name=%s"  
     urlCheckLimit = "https://api.twitter.com/1/account/rate_limit_status.json"
@@ -12,11 +17,32 @@ class Crawler:
     urlSingleUserInfo = "https://api.twitter.com/1/users/show.json?screen_name=%s&include_entities=true" 
     # up to 100 users: returns a list, data[0]['name'] include_entities = true?
     urlUserInfo = "https://api.twitter.com/1/users/lookup.json?include_entities=true&screen_name=%s"
+
+    def __init__(self, logName):
+        self.logFile = open(logName,"w")
+        self.db = MySQLDataStore()
+
+    def open_url(self,url):
+        count = 1
+        while (count):
+            if (count == 10):
+                self.logFile.write("Error in crawler/open_url")
+                self.clean_up()
+                sys.exit()
+            try: 
+                res = urllib2.urlopen(url)
+                return res
+            except urllib2.URLError, e:
+                self.logFile.write(str(e.reason))
+                count = count + 1
+                sleep(2)
+            
  
     def check_limit(self):
         url = self.urlCheckLimit
-        res = urllib2.urlopen(url)
+        res = self.open_url(url)
         data = json.loads(res.read())
+        print data
         limit = data['remaining_hits']
         return limit
 
@@ -24,7 +50,7 @@ class Crawler:
         #construct sname-list seperated by ,
         url = self.urlUserInfo
         #check rate limit
-        res = urllib2.urlopen(url)
+        res = self.open_url(url)
         return json.loads(res.read())
 
     
@@ -78,7 +104,7 @@ class Crawler:
 
     def get_one_page_id(self, screenName, cursor):
         url = self.urlGetFollowerID%(cursor, screenName)
-        res = urllib2.urlopen(url) 
+        res = self.open_url(url) 
         strData = res.read() 
         data = json.loads(strData)
         ids = data['ids']
@@ -88,14 +114,25 @@ class Crawler:
     def get_all_follower_id(self,filename):
        inputFile = open(filename,"r")
        for line in inputFile:
-           self.get_follower_id(line)
+           ids = self.get_follower_id(line)
+           entry = MySQLTwitterData(None,line,ids,None)
+           self.db.store(entry.userID,entry.screenName,entry.followerID,entry.location)
+           
 
+    def clean_up(self):
+        self.logFile.close()
+        self.db.close()
+    
 
 def main():
-    crawler = Crawler()
-    #crawler.get_follower_id("lianghai")
-    crawler.get_screen_name('input.txt','screenName.txt')
-    crawler.get_all_follower_id('screenName.txt')
+    crawler = Crawler("log")
+    print "set up crawler done"
+    ids = crawler.get_follower_id("lianghai")
+    print ids
+    #crawler.get_screen_name('input.txt','screenName.txt')
+   # crawler.get_all_follower_id('screenName.txt')
+    crawler.clean_up()
+
 
 if __name__=='__main__':
     main()

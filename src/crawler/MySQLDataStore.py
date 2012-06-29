@@ -6,7 +6,6 @@ import db_conf
 
 class MySQLDataStore:
 
-    _dbName = 'twitter_data'
 
     filename = None
     db = None
@@ -15,8 +14,7 @@ class MySQLDataStore:
     strSelectByID  = """SELECT * From %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
 
-    def __init__(self, filename, create = False):
-        self.filename = filename
+    def __init__(self):
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName)
 
     def store(self, userID, screenName, followerID, location):
@@ -45,9 +43,10 @@ class MySQLDataStore:
 
         res = []
         for row in rows:
-            res.append(int(row[0]))
-
+        	res.append(int(row[0]))
         return res
+
+  
 
     def close(self):
         if self.db:
@@ -61,18 +60,18 @@ def main():
     #Specify a file path to store the database data
     dbName = 'test.db'
     #Create a MySQLDataStore object. True means this call will create a new database, one error will raise if the database already exists.
-    simpleDataStore = MySQLDataStore(dbName, True)
+    simpleDataStore = MySQLDataStore()
     tmpData = MySQLTwitterData(1826, 'uiuc',  [19, 23, 25, 668], 'Champaign');
     #Store the data of one user. The parameters are (userName(string), userID(int), followerID(int list), followerPos(int list, each element is a list with two elements, namely x, and y coordination))
-    simpleDataStore.store(tmpData.userID, tmpData.screenName, json.dumps(tmpData.followerID), tmpData.location)
+    simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.followerID, tmpData.location)
     tmpData = MySQLTwitterData(1829, 'umich', [19, 23, 25, 668, 890], 'Michigan') 
-    simpleDataStore.store(tmpData.userID, tmpData.screenName, json.dumps(tmpData.followerID), tmpData.location)
+    simpleDataStore.store(tmpData.userID, tmpData.screenName, tmpData.followerID, tmpData.location)
     #Close the db connection when you do not need it any more
     simpleDataStore.close()
 
     #test read
     #False means this call will not create a new db
-    simpleDataStore = MySQLDataStore(dbName, False)
+    simpleDataStore = MySQLDataStore()
     #two functions are now supported:
     #1. get_all_id: will return a list containing all user ids
     print simpleDataStore.get_all_id()
