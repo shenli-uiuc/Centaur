@@ -10,7 +10,8 @@ class MySQLDataStore:
     filename = None
     db = None
 
-    strInsertValue = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
+    strInsert2Follower = """INSERT INTO %s VALUES()"""
+    strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strSelectByID  = """SELECT * From %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
 
@@ -20,15 +21,19 @@ class MySQLDataStore:
     def store(self, userID, screenName, followerID, location):
         followerNum = len(followerID)
         c = self.db.cursor()
-        c.execute(self.strInsertValue%(db_conf.tableName, userID, screenName, json.dumps(followerID), location))
+        c.execute(self.strInsert2Data%(db_conf.dataTable, userID, screenName, json.dumps(followerID), location))
 
         # To improve efficiency, the commit function should be used in a batched way
         self.db.commit()
         c.close()
 
+    def store_followers_piece(self, userID, pCursor, nCursor, followerID):
+        
+        
+
     def get_one_user(self, userID):
         c = self.db.cursor()
-        c.execute(self.strSelectByID%(db_conf.tableName, userID))
+        c.execute(self.strSelectByID%(db_conf.dataTable, userID))
         rows = c.fetchall()
         res = []
         for row in rows:
@@ -38,7 +43,7 @@ class MySQLDataStore:
 
     def get_all_id(self):
         c = self.db.cursor()
-        c.execute(self.strSelectAllID%(db_conf.tableName))
+        c.execute(self.strSelectAllID%(db_conf.dataTable))
         rows = c.fetchall()
 
         res = []
