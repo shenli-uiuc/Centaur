@@ -1,10 +1,15 @@
 import urllib2
-import simplejson as json
 import time
 import os
 import re
 import sys
+from MySQLTwitterData import MySQLTwitterData
 from MySQLDataStore import MySQLDataStore
+try:
+	import json
+except ImportError,e:
+	import simplejson as json
+
 
 class Crawler:
     
@@ -113,11 +118,12 @@ class Crawler:
 
     def get_all_follower_id(self,filename):
        inputFile = open(filename,"r")
+       count = 1 #for testing purpose
        for line in inputFile:
            ids = self.get_follower_id(line)
-           entry = MySQLTwitterData(None,line,ids,None)
+           entry = MySQLTwitterData(count,line,ids,None)
            self.db.store(entry.userID,entry.screenName,entry.followerID,entry.location)
-           
+           count = count+1
 
     def clean_up(self):
         self.logFile.close()
@@ -126,11 +132,9 @@ class Crawler:
 
 def main():
     crawler = Crawler("log")
-    print "set up crawler done"
-    ids = crawler.get_follower_id("lianghai")
-    print ids
+    #ids = crawler.get_follower_id("lianghai")
     #crawler.get_screen_name('input.txt','screenName.txt')
-   # crawler.get_all_follower_id('screenName.txt')
+    crawler.get_all_follower_id('sample.txt')
     crawler.clean_up()
 
 
