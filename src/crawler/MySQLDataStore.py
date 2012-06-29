@@ -6,18 +6,19 @@ import db_conf
 
 class MySQLDataStore:
 
-
+    badCharSet = ["'", '"']
     filename = None
     db = None
 
     strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
     strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
-    strSelectByID  = """SELECT * From %s WHERE id = %d"""
+    strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
+    strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
 
     def __init__(self):
-        self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName)
+        self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName, charset='utf8')
 
     def store(self, userID, screenName, followerID, location):
         c = self.db.cursor()
@@ -33,10 +34,23 @@ class MySQLDataStore:
         self.db.commit()
         c.close() 
         
+    def _validate_str(self, rawStr):
+        if not rawStr:
+            return rawStr
+        for c in self.badCharSet:
+            rawStr = rawStr.replace(c, '_')
+        return rawStr
+
     def store_user(self, userID, screenName, followerNum, location):
         c = self.db.cursor()
+        cmd = self.strSelectByID%(db_conf.userTable, userID)
+        c.execute(cmd)
+        rows = c.fetchall()
+        if len(rows):
+            print "user %s already exist!"%(screenName)
+            return
         print location
-        location.replace("'", "_")
+        location = self._validate_str(location)
         print location
         cmd = self.strInsert2User%(db_conf.userTable, userID, screenName, followerNum, location)
         print cmd
@@ -64,7 +78,15 @@ class MySQLDataStore:
         	res.append(int(row[0]))
         return res
 
-  
+    def get_one_id(self, screenName):
+        c = self.db.cursor()
+        c.execute(self.strSelectIDByName%(db_conf.userTable, screenName))
+        rows = c.fetchall()
+        if len(rows):
+            return int(rows[0][0])
+        else:
+            return None    
+      
 
     def close(self):
         if self.db:
@@ -72,7 +94,7 @@ class MySQLDataStore:
         
         
 def main():
-
+    """
     #Test Write
 
     #Specify a file path to store the database data
@@ -93,7 +115,7 @@ def main():
     simpleDataStore.store_user(1, 'test2', 15, 'Shanghai, China')
 
     simpleDataStore.close()
-
+    """
     #test read
     #False means this call will not create a new db
     simpleDataStore = MySQLDataStore()
@@ -105,6 +127,8 @@ def main():
     for userID in simpleDataStore.get_all_id():
         print simpleDataStore.get_one_user(userID)
 
+    print simpleDataStore.get_one_id('ladygaga')
+    print simpleDataStore.get_one_id('justinbieber')
     simpleDataStore.close()
 
 if __name__ == '__main__':
