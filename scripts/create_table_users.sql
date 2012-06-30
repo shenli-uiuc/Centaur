@@ -6,4 +6,5 @@ CREATE TABLE users(
 
     PRIMARY KEY (id),
     INDEX (screen_name)
+    INDEX (location)
 )ENGINE=MyISAM CHARACTER SET=binary;
