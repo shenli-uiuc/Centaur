@@ -16,6 +16,7 @@ class MySQLDataStore:
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
     strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
+    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and previous_cursor = %d"""
 
     def __init__(self):
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName, charset='utf8')
@@ -33,6 +34,16 @@ class MySQLDataStore:
         c.execute(self.strInsert2Follower%(db_conf.followerTable, userID, pCursor, nCursor, json.dumps(followerID)))
         self.db.commit()
         c.close() 
+
+    def check_follower_piece(self, userID, pCursor):
+        c = self.db.cursor()
+        cmd = self.strSelectNCursor%(db_conf.followerTable, userID, pCursor)
+        c.execute(cmd)
+        rows = c.fetchall()
+        if len(rows):
+            return int(rows[0][0])
+        else:
+            return None
         
     def _validate_str(self, rawStr):
         if not rawStr:
@@ -127,6 +138,9 @@ def main():
     for userID in simpleDataStore.get_all_id():
         print simpleDataStore.get_one_user(userID)
 
+    print simpleDataStore.check_follower_piece(100, 0)
+    print simpleDataStore.check_follower_piece(100, 3)
+    print simpleDataStore.check_follower_piece(100, 7)
     print simpleDataStore.get_one_id('ladygaga')
     print simpleDataStore.get_one_id('justinbieber')
     simpleDataStore.close()
