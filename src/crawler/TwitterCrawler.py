@@ -27,29 +27,42 @@ class Crawler:
         self.logFile = open(logName,"w")
         self.db = MySQLDataStore()
 
-    def open_url(self,url):
+    def open_url_followerID(self,url,screenName):
         count = 1
         while (count):
             if (count == 10):
-                self.logFile.write("Error in crawler/open_url")
-                self.clean_up()
-                sys.exit()
+                self.logFile.write("Error in requesting:%s %s"%(screenName,url))
+                return None                
             try: 
                 res = urllib2.urlopen(url)
                 return res
             except urllib2.URLError, e:
-                self.logFile.write(str(e.reason))
+                self.logFile.write(e.strerror)
                 count = count + 1
-                sleep(2)
+                
+    def open_url_limit(self,url):
+    	count = 1
+    	while (count):
+		if (count == 10):
+    			self.logFile.write("Error in requesting:%s"%(url))
+    			self.clean_up()
+    			sys.exit()
+    		try:
+    			res = urllib2.urlopen(url)
+    			return res
+    		except urllib2.URLError,e:
+    			self.logFile.write(e.strerror)
+    			count = count + 1
             
  
     def check_limit(self):
         url = self.urlCheckLimit
-        res = self.open_url(url)
+        res = self.open_url_limit(url)
         data = json.loads(res.read())
         print data
         limit = data['remaining_hits']
-        return limit
+	wakeup = data['reset_time_in_seconds']
+        return (limit,wakeup)
 
     def get_user_info(self,follower_sname_list):
         #construct sname-list seperated by ,
@@ -79,51 +92,49 @@ class Crawler:
             name = re.split(r'[()]',line)
             outputFile.write(name[1]+'\n')
 
-    def get_follower_id(self, screenName):
+    def get_follower_id(self, screenName):	    
         cursor = -1
-        id_list = []
-        i = 0
-        outputFile = self.create_file(screenName,i)
+        userID = get_one_id(screenName)
+        print screenName
         while (cursor):
-            limit = self.check_limit()
-            if (limit == 0):
-                outputFile.close()
-                i = i+1
-                outputFile = self.create_file(screenName,i)
-                time.sleep(3600)
+        	(limit,wakeup) = self.check_limit()
+		if (limit == 0):  
+			interval = wakeup-time.time()
+			time.sleep(interval)
 
-            (ids,nextCursor) = self.get_one_page_id(screenName,cursor)
-            id_list.extend(ids)
-            for follower_id in ids:
-                outputFile.write("%d\n"%(follower_id))
-            cursor = nextCursor
+		(pCursor,nCursor,ids) = self.get_one_page_id(screenName,cursor)
+		if (pCursor == 0) and (nCursor == 0) and (ids == 0):
+			return False
+		self.db.store_follower_piece(userID,pCursor,nCursor,ids)
+		cursor = nCursor
 
         # cursor = 0, we are at the last page
-        (ids,nextCursor) = self.get_one_page_id(screenName,cursor)
-        id_list.extend(ids)
-        for follower_id in ids:
-            outputFile.write("%d\n"%(follower_id))
-        outputFile.close()
-        return id_list
+        (pCursor,nCursor,ids) = self.get_one_page_id(screenName,cursor)
+        if (pCursor == 0) and (nCursor == 0) and (ids == 0):
+        	return False
+  	self.db.store_follower_piece(userID,pCursor,nCursor,ids)
+	return True
 
 
     def get_one_page_id(self, screenName, cursor):
         url = self.urlGetFollowerID%(cursor, screenName)
-        res = self.open_url(url) 
+        res = self.open_url_followerID(url,screenName) 
+        if res == None:
+        	return (0,0,0)
         strData = res.read() 
         data = json.loads(strData)
         ids = data['ids']
-        nextCursor = data['next_cursor']
-        return (ids, nextCursor)        
+        nCursor = data['next_cursor']
+	pCursor = data['previous_cursor']
+        return (pCursor, nCursor,ids)        
 
     def get_all_follower_id(self,filename):
        inputFile = open(filename,"r")
-       count = 1 #for testing purpose
        for line in inputFile:
-           ids = self.get_follower_id(line)
-           entry = MySQLTwitterData(count,line,ids,None)
-           self.db.store(entry.userID,entry.screenName,entry.followerID,entry.location)
-           count = count+1
+	       if (self.get_follower_id(line) == False):
+		       line = inputFile.next()
+       inputFile.close()
+                    
 
     def clean_up(self):
         self.logFile.close()
@@ -131,7 +142,7 @@ class Crawler:
     
 
 def main():
-    crawler = Crawler("log")
+    crawler = Crawler("log.txt")
     #ids = crawler.get_follower_id("lianghai")
     #crawler.get_screen_name('input.txt','screenName.txt')
     crawler.get_all_follower_id('sample.txt')
