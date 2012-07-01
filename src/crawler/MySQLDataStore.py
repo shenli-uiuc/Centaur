@@ -140,9 +140,10 @@ def main():
 
     print simpleDataStore.check_follower_piece(100, 0)
     print simpleDataStore.check_follower_piece(100, 3)
-    print simpleDataStore.check_follower_piece(100, 7)
+    #print simpleDataStore.check_follower_piece(100, 7)
     print simpleDataStore.get_one_id('ladygaga')
     print simpleDataStore.get_one_id('justinbieber')
+    print simpleDataStore.get_one_id('lianghai')
     simpleDataStore.close()
 
 if __name__ == '__main__':

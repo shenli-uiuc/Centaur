@@ -16,7 +16,7 @@ class Crawler:
     logFile = None 
     db = None
 
-    urlGetFollowerID = "https://api.twitter.com/1/followers/ids.json?cursor=%d&screen_name=%s"  
+    urlGetFollowerID = "https://api.twitter.com/1/followers/ids.json?cursor=%s&screen_name=%s"  
     urlCheckLimit = "https://api.twitter.com/1/account/rate_limit_status.json"
     # for 1 user: id, screen name, name 
     urlSingleUserInfo = "https://api.twitter.com/1/users/show.json?screen_name=%s&include_entities=true" 
@@ -31,8 +31,8 @@ class Crawler:
         count = 1
         while (count):
             if (count == 10):
-                self.logFile.write("Error in requesting:%s %s"%(screenName,url))
-                return None                
+                self.logFile.write("URL exceptions occur in %s: %s\n"%(screenName,url))
+                return None                 
             try: 
                 res = urllib2.urlopen(url)
                 return res
@@ -44,7 +44,7 @@ class Crawler:
     	count = 1
     	while (count):
 		if (count == 10):
-    			self.logFile.write("Error in requesting:%s"%(url))
+    			self.logFile.write("Error in requesting: %s\n"%(url))
     			self.clean_up()
     			sys.exit()
     		try:
@@ -59,7 +59,6 @@ class Crawler:
         url = self.urlCheckLimit
         res = self.open_url_limit(url)
         data = json.loads(res.read())
-        print data
         limit = data['remaining_hits']
 	wakeup = data['reset_time_in_seconds']
         return (limit,wakeup)
@@ -92,47 +91,45 @@ class Crawler:
             name = re.split(r'[()]',line)
             outputFile.write(name[1]+'\n')
 
-    def get_follower_id(self, screenName):	    
-        cursor = -1
-        userID = get_one_id(screenName)
-        print screenName
-        while (cursor):
+    def get_follower_id(self, screenName, userID, cursor):	   
+	screenName = screenName.split('\n')[0] #works for sample.txt
+	 
+        while cursor != "0": 
         	(limit,wakeup) = self.check_limit()
 		if (limit == 0):  
 			interval = wakeup-time.time()
 			time.sleep(interval)
 
 		(pCursor,nCursor,ids) = self.get_one_page_id(screenName,cursor)
-		if (pCursor == 0) and (nCursor == 0) and (ids == 0):
-			return False
+		print (screenName, userID, pCursor, nCursor)
+		
+		if ids == 0 and pCursor == 0 and nCursor == 0:
+			return 
 		self.db.store_follower_piece(userID,pCursor,nCursor,ids)
 		cursor = nCursor
-
-        # cursor = 0, we are at the last page
-        (pCursor,nCursor,ids) = self.get_one_page_id(screenName,cursor)
-        if (pCursor == 0) and (nCursor == 0) and (ids == 0):
-        	return False
-  	self.db.store_follower_piece(userID,pCursor,nCursor,ids)
-	return True
 
 
     def get_one_page_id(self, screenName, cursor):
         url = self.urlGetFollowerID%(cursor, screenName)
         res = self.open_url_followerID(url,screenName) 
-        if res == None:
-        	return (0,0,0)
-        strData = res.read() 
+	if res == None:
+		return 
+       	strData = res.read() 
         data = json.loads(strData)
+	if 'errors' in data.keys():
+		self.logFile.write("Errors in requesting %s: %s\n",(screenName, url))
+		return (0,0,0)
         ids = data['ids']
-        nCursor = data['next_cursor']
-	pCursor = data['previous_cursor']
+        nCursor = data['next_cursor_str']
+	pCursor = data['previous_cursor_str']
         return (pCursor, nCursor,ids)        
 
     def get_all_follower_id(self,filename):
        inputFile = open(filename,"r")
        for line in inputFile:
-	       if (self.get_follower_id(line) == False):
-		       line = inputFile.next()
+		userID = self.db.get_one_id(screenName)
+		cursor = self.db.get_next_cursor(userID)
+	        self.get_follower_id(line,userID,cursor) 
        inputFile.close()
                     
 

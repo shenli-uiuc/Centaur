@@ -24,6 +24,11 @@ class TwitterUserCrawler:
             cur = next
             next += 100
 
+	if cur < len(screenNameArr):
+            res = self.get_100_user_info(screenNameArr[cur:len(screenNameArr)])
+            self.store_users(res)
+	    
+
     def store_users(self, dictData):
         for screenName in dictData.keys():
             id = dictData[screenName]['id']
@@ -59,7 +64,7 @@ class TwitterUserCrawler:
             
          
 def main():
-    f = open('screenName.txt', 'r')
+    f = open('sample.txt', 'r')
     names = []
     for line in f:
         names.append(line.split('\n')[0])
@@ -68,7 +73,6 @@ def main():
 
     crawler = TwitterUserCrawler();
     crawler.get_user_info(names) 
-
 
 if __name__=='__main__':
     main() 
