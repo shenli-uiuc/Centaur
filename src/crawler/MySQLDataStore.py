@@ -11,13 +11,13 @@ class MySQLDataStore:
     db = None
 
     strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
-    strInsert2Follower = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
+    strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
     strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
-    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and previous_cursor = %s"""
-    StrSelectMaxNCursor = """SELECT """
+    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and previous_cursor = %d"""
+    StrSelectMaxNCursor = """SELECT next_cursor FROM %s WHERE id = %d AND previous_cursor = (SELECT MAX(previous_cursor) FROM follower_id WHERE id = %d)"""
 
     def __init__(self):
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName, charset='utf8')
@@ -36,13 +36,25 @@ class MySQLDataStore:
         self.db.commit()
         c.close() 
 
+    def get_next_cursor(self, userID):
+        c = self.db.cursor()
+        c.execute(self.StrSelectMaxNCursor%(db_conf.followerTable, userID, userID))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return str(rows[0][0])
+        else:
+            return str(-1)
+
     def check_follower_piece(self, userID, pCursor):
+        pCursor = int(pCursor)
         c = self.db.cursor()
         cmd = self.strSelectNCursor%(db_conf.followerTable, userID, pCursor)
         c.execute(cmd)
         rows = c.fetchall()
+        c.close()
         if len(rows):
-            return int(rows[0][0])
+            return str(rows[0][0])
         else:
             return None
         
@@ -60,6 +72,7 @@ class MySQLDataStore:
         rows = c.fetchall()
         if len(rows):
             print "user %s already exist!"%(screenName)
+            c.close()
             return
         print location
         location = self._validate_str(location)
@@ -74,6 +87,7 @@ class MySQLDataStore:
         c = self.db.cursor()
         c.execute(self.strSelectByID%(db_conf.dataTable, userID))
         rows = c.fetchall()
+        c.close()
         res = []
         for row in rows:
             res.append((int(row[0]), row[1], row[2], row[3]))
@@ -84,6 +98,7 @@ class MySQLDataStore:
         c = self.db.cursor()
         c.execute(self.strSelectAllID%(db_conf.dataTable))
         rows = c.fetchall()
+        c.close()
 
         res = []
         for row in rows:
@@ -94,6 +109,7 @@ class MySQLDataStore:
         c = self.db.cursor()
         c.execute(self.strSelectIDByName%(db_conf.userTable, screenName))
         rows = c.fetchall()
+        c.close()
         if len(rows):
             return int(rows[0][0])
         else:
