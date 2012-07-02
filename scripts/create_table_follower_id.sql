@@ -1,5 +1,6 @@
 CREATE TABLE follower_id(
     id BIGINT,
+    offset BIGINT,
     previous_cursor BIGINT,
     next_cursor BIGINT,
     follower_id blob,
