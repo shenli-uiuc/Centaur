@@ -111,6 +111,7 @@ class Crawler:
 
 
     def get_one_page_id(self, screenName, cursor):
+        print ('0', screenName, cursor)
         url = self.urlGetFollowerID%(cursor, screenName)
         res = self.open_url_followerID(url,screenName) 
         if res == None:
@@ -125,6 +126,7 @@ class Crawler:
         # the cursor is int64, I have used big int in the follower_id table -- Shen Li
         nCursor = data['next_cursor']
         pCursor = data['previous_cursor']
+        print ('1', screenName, nCursor, len(ids))
         return (pCursor, nCursor,ids)        
 
     def get_all_follower_id(self,filename):
@@ -133,6 +135,7 @@ class Crawler:
             screenName = line.split('\n')[0]
             userID = self.db.get_one_id(screenName)
             cursor = self.db.get_next_cursor(userID)
+            print ('2', screenName, cursor)
             self.get_follower_id(screenName,userID,cursor) 
         inputFile.close()
                     

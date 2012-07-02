@@ -42,9 +42,9 @@ class MySQLDataStore:
         rows = c.fetchall()
         c.close()
         if len(rows):
-            return str(rows[0][0])
+            return rows[0][0]
         else:
-            return str(-1)
+            return -1
 
     def check_follower_piece(self, userID, pCursor):
         pCursor = int(pCursor)
@@ -54,7 +54,7 @@ class MySQLDataStore:
         rows = c.fetchall()
         c.close()
         if len(rows):
-            return str(rows[0][0])
+            return rows[0][0]
         else:
             return None
         
