@@ -11,12 +11,13 @@ class MySQLDataStore:
     db = None
 
     strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
-    strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, '%s')"""
+    strInsert2Follower = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
     strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
-    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and previous_cursor = %d"""
+    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and previous_cursor = %s"""
+    StrSelectMaxNCursor = """SELECT """
 
     def __init__(self):
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName, charset='utf8')
