@@ -3,7 +3,6 @@ import time
 import os
 import re
 import sys
-from MySQLTwitterData import MySQLTwitterData
 from MySQLDataStore import MySQLDataStore
 try:
     import json
@@ -37,7 +36,9 @@ class Crawler:
                 res = urllib2.urlopen(url)
                 return res
             except urllib2.HTTPError, e:
-                self.logFIle.write(str(e.strerror, e.message))
+                self.logFile.write(str(e.strerror, e.message))
+                count = count + 1
+                time.sleep(5)
             except urllib2.URLError, e:
                 self.logFile.write(e.reason)
                 #self.logFile.write(e.strerror)

@@ -1,8 +1,12 @@
-from MySQLTwitterData import MySQLTwitterData
-import json
 import MySQLdb
 
 import db_conf
+try:
+    import json
+except ImportError,e:
+    import simplejson as json
+
+
 
 class MySQLDataStore:
 
@@ -17,7 +21,16 @@ class MySQLDataStore:
     strSelectAllID = """SELECT id FROM %s"""
     strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
     strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and offset = %d"""
-    StrSelectMaxNCursor = """SELECT offset, next_cursor FROM %s WHERE id = %d AND offset = (SELECT MAX(offset) FROM follower_id WHERE id = %d)"""
+    strSelectMaxNCursor = """SELECT offset, next_cursor FROM %s WHERE id = %d AND offset = (SELECT MAX(offset) FROM follower_id WHERE id = %d)"""
+    strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
+
+    strSelectFollowerPiece = """SELECT follower_id FROM %s WHERE id = %d AND offset = %d"""
+
+    strSelectLocation = """SELECT location FROM %s WHERE id = %d"""
+
+    strSelectCurOffset = """SELECT offset from %s WHERE id = %d"""
+    strUpdateCurOffset = """UPDATE %s SET offset = %d WHERE id = %d"""
+    strInsertCurOffset = """INSERT INTO %s VALUES(%d, %d)"""
 
     def __init__(self):
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName, charset='utf8')
@@ -37,15 +50,74 @@ class MySQLDataStore:
         self.db.commit()
         c.close() 
 
+    def select_follower_piece(self, userID, offset):
+        c = self.db.cursor()
+        c.execute(self.strSelectFollowerPiece%(db_conf.followerTable, userID, offset))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return rows[0][0]
+        else:
+            return None
+
+
+    #get the location from users table with the given user id
+    def select_user_location(self, userID):
+        c = self.db.cursor()
+        c.execute(self.strSelectLocation%(db_conf.userTable, userID))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return rows[0][0]
+        else:
+            return None
+
+
+    #get next_cursor to pull the follower id list from follower_id table
     def get_next_cursor(self, userID):
         c = self.db.cursor()
-        c.execute(self.StrSelectMaxNCursor%(db_conf.followerTable, userID, userID))
+        c.execute(self.strSelectMaxNCursor%(db_conf.followerTable, userID, userID))
         rows = c.fetchall()
         c.close()
         if len(rows):
             return (int(rows[0][0]), int(rows[0][1])) 
         else:
             return (0, -1)
+
+    #get max offset of a given user
+    def select_max_offset(self, userID):
+        c = self.db.cursor()
+        c.execute(self.strSelectMaxOffset%(db_conf.followerTable, userID))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return int(rows[0][0])
+        else:
+            return -1
+
+    #check current offset from tmp_offset table to see which piece of followers' locations should we pull
+    def select_cur_offset(self, userID):
+        c = self.db.cursor()
+        c.execute(self.strSelectCurOffset%(db_conf.tmpOffsetTable, userID))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return int(rows[0][0])
+        else:
+            self.insert_cur_offset(userID, 0)
+            return 0
+
+    def update_cur_offset(self, userID, curOffset):
+        c = self.db.cursor()
+        c.execute(self.strUpdateCurOffset%(db_conf.tmpOffsetTable, curOffset, userID))
+        c.close()
+        self.db.commit()
+
+    def insert_cur_offset(self, userID, curOffset):
+        c = self.db.cursor()
+        c.execute(self.strInsertCurOffset%(db_conf.tmpOffsetTable, userID, curOffset))
+        c.close()
+        self.db.commit()
 
     def check_follower_piece(self, userID, offset):
         pCursor = int(pCursor)
@@ -72,14 +144,14 @@ class MySQLDataStore:
         c.execute(cmd)
         rows = c.fetchall()
         if len(rows):
-            print "user %s already exist!"%(screenName)
+            #print "user %s already exist!"%(screenName)
             c.close()
             return
-        print location
+        #print location
         location = self._validate_str(location)
-        print location
+        #print location
         cmd = self.strInsert2User%(db_conf.userTable, userID, screenName, followerNum, location)
-        print cmd
+        #print cmd
         c.execute(cmd)
         self.db.commit()
         c.close()
