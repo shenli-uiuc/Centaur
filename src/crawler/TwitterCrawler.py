@@ -36,8 +36,11 @@ class Crawler:
             try: 
                 res = urllib2.urlopen(url)
                 return res
+            except urllib2.HTTPError, e:
+                self.logFIle.write(str(e.strerror, e.message))
             except urllib2.URLError, e:
-                self.logFile.write(e.strerror)
+                self.logFile.write(e.reason)
+                #self.logFile.write(e.strerror)
                 count = count + 1
                 time.sleep(5)
                 
@@ -98,9 +101,11 @@ class Crawler:
         while cursor != 0: 
             offset += 1
             (limit,wakeup) = self.check_limit()
-            if (limit == 0):  
+            while (limit == 0):  
                 interval = wakeup-time.time()
                 time.sleep(interval)
+                time.sleep(30)
+                (limit,wakeup) = self.check_limit()
 
             (pCursor,nCursor,ids) = self.get_one_page_id(screenName,cursor)
             print (screenName, userID, offset, pCursor, nCursor)
@@ -112,15 +117,19 @@ class Crawler:
 
 
     def get_one_page_id(self, screenName, cursor):
+        print ("Screen Name", screenName, "cursor", cursor)
         url = self.urlGetFollowerID%(cursor, screenName)
+        print url
         res = self.open_url_followerID(url,screenName) 
         if res == None:
-            print "Fatal error: follower id page return None!!!"
+            print "Fatal Errors: follower id page return None!!!"
+            self.logFile.write("Fatal Errors in requesting %s: %s\n",(screenName, url))
             return (0, 0, 0)
         strData = res.read() 
         data = json.loads(strData)
         if 'errors' in data.keys():
-            self.logFile.write("Errors in requesting %s: %s\n",(screenName, url))
+            print "Fatal Errors: follower id page return None!!!"
+            self.logFile.write("Fatal Errors in requesting %s: %s\n",(screenName, url))
             return (0,0,0)
         ids = data['ids']
         # the cursor is int64, I have used big int in the follower_id table -- Shen Li
