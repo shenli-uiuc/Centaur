@@ -11,17 +11,18 @@ class MySQLDataStore:
     db = None
 
     strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
-    strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, '%s')"""
+    strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
     strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
-    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and previous_cursor = %d"""
-    StrSelectMaxNCursor = """SELECT next_cursor FROM %s WHERE id = %d AND previous_cursor = (SELECT MAX(previous_cursor) FROM follower_id WHERE id = %d)"""
+    strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and offset = %d"""
+    StrSelectMaxNCursor = """SELECT offset, next_cursor FROM %s WHERE id = %d AND offset = (SELECT MAX(offset) FROM follower_id WHERE id = %d)"""
 
     def __init__(self):
         self.db = MySQLdb.connect(db_conf.host, db_conf.usr, db_conf.pwd, db_conf.dbName, charset='utf8')
 
+    #deprecated
     def store(self, userID, screenName, followerID, location):
         c = self.db.cursor()
         c.execute(self.strInsert2Data%(db_conf.dataTable, userID, screenName, json.dumps(followerID), location))
@@ -30,9 +31,9 @@ class MySQLDataStore:
         self.db.commit()
         c.close()
 
-    def store_follower_piece(self, userID, pCursor, nCursor, followerID):
+    def store_follower_piece(self, userID, offset, pCursor, nCursor, followerID):
         c = self.db.cursor()
-        c.execute(self.strInsert2Follower%(db_conf.followerTable, userID, pCursor, nCursor, json.dumps(followerID)))
+        c.execute(self.strInsert2Follower%(db_conf.followerTable, userID, offset, pCursor, nCursor, json.dumps(followerID)))
         self.db.commit()
         c.close() 
 
@@ -42,14 +43,14 @@ class MySQLDataStore:
         rows = c.fetchall()
         c.close()
         if len(rows):
-            return rows[0][0]
+            return (int(rows[0][0]), int(rows[0][1])) 
         else:
-            return -1
+            return (0, -1)
 
-    def check_follower_piece(self, userID, pCursor):
+    def check_follower_piece(self, userID, offset):
         pCursor = int(pCursor)
         c = self.db.cursor()
-        cmd = self.strSelectNCursor%(db_conf.followerTable, userID, pCursor)
+        cmd = self.strSelectNCursor%(db_conf.followerTable, userID, offset)
         c.execute(cmd)
         rows = c.fetchall()
         c.close()

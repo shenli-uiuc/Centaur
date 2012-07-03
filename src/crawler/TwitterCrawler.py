@@ -92,26 +92,26 @@ class Crawler:
             name = re.split(r'[()]',line)
             outputFile.write(name[1]+'\n')
 
-    def get_follower_id(self, screenName, userID, cursor):	   
+    def get_follower_id(self, screenName, userID, offset, cursor):	   
         screenName = screenName.split('\n')[0] #works for sample.txt
 	 
         while cursor != 0: 
+            offset += 1
             (limit,wakeup) = self.check_limit()
             if (limit == 0):  
                 interval = wakeup-time.time()
                 time.sleep(interval)
 
             (pCursor,nCursor,ids) = self.get_one_page_id(screenName,cursor)
-            print (screenName, userID, pCursor, nCursor)
+            print (screenName, userID, offset, pCursor, nCursor)
 		
             if ids == 0 and pCursor == 0 and nCursor == 0:
                 return 
-            self.db.store_follower_piece(userID,pCursor,nCursor,ids)
+            self.db.store_follower_piece(userID, offset, pCursor, nCursor, ids)
             cursor = nCursor
 
 
     def get_one_page_id(self, screenName, cursor):
-        print ('0', screenName, cursor)
         url = self.urlGetFollowerID%(cursor, screenName)
         res = self.open_url_followerID(url,screenName) 
         if res == None:
@@ -126,7 +126,6 @@ class Crawler:
         # the cursor is int64, I have used big int in the follower_id table -- Shen Li
         nCursor = data['next_cursor']
         pCursor = data['previous_cursor']
-        print ('1', screenName, nCursor, len(ids))
         return (pCursor, nCursor,ids)        
 
     def get_all_follower_id(self,filename):
@@ -134,9 +133,10 @@ class Crawler:
         for line in inputFile:
             screenName = line.split('\n')[0]
             userID = self.db.get_one_id(screenName)
-            cursor = self.db.get_next_cursor(userID)
-            print ('2', screenName, cursor)
-            self.get_follower_id(screenName,userID,cursor) 
+            if not userID:
+                continue
+            (offset, cursor) = self.db.get_next_cursor(userID)
+            self.get_follower_id(screenName, userID, offset, cursor) 
         inputFile.close()
                     
 
