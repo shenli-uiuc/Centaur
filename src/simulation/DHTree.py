@@ -1,6 +1,10 @@
 from NodeGenerator import NodeGenerator
 import math
-import simplejson as json
+
+try:
+    import json
+except ImportError, e:
+    import simplejson as json
 
 
 class DHTree:
@@ -40,12 +44,13 @@ class DHTree:
         #print (begin, end, r, curH)
         if 'root' == curH:
             curH = self.h
-        if curH <= 2:
+        if curH <= 2 or len(index) <= self.d:
             #print "in curH <= 2"
             for i in range(indexLen):
                 if not self.V[index[i]].used:
                     self.V[index[i]].used = True
                     r.cList.append(index[i])
+                    self.print_info(r, self.V[index[i]], 0)
             return
 
         for i in range(indexLen):
@@ -61,21 +66,25 @@ class DHTree:
         """
         tmpAngle = 0
         cnt = 0
-        cv = index[0]
+        cv = -1
         cd = self.INFTY
         curIndex = []
         for i in range(indexLen):
             u = self.V[index[i]]
-            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH] or i + 1 >= indexLen:
-                if i + 1 >= indexLen and u.angle - tmpAngle < self.alpha and cnt < self.treeSizes[curH]:
-                    curIndex.append(index[i])
-                elif len(curIndex):
+            if u.used and not u == r:
+                print "WRONG"
+            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH - 1]:
+                #if i + 1 >= indexLen and u.angle - tmpAngle < self.alpha and cnt < self.treeSizes[curH-1]:
+                #    curIndex.append(index[i])
+                if len(curIndex):
                     r.cList.append(cv)
+                    self.print_info(r, self.V[cv], cd)
                     self.build_tree(curIndex,  self.V[cv], curH - 1)
-                    tmpAngle = u.angle
                     cnt = 0
-                    cd = self.INFTY
                     curIndex = []
+                cd = self.INFTY
+                cv = -1
+                tmpAngle = u.angle
 
 
             if not u.used:
@@ -86,6 +95,17 @@ class DHTree:
                     cv = index[i]
                 cnt += 1
 
+            if i + 1 >= indexLen and u.used:
+                print "WRONG!!"
+                
+            if i + 1 >= indexLen:
+                r.cList.append(cv)
+                self.print_info(r, self.V[cv], cd)
+                self.build_tree(curIndex, self.V[cv], curH - 1)
+                break
+
+    def print_info(self, a, b, cd):
+        print "%d(%f, %f) connects %d(%f, %f), at distance %f(%f), angle"%(a.id, a.x, a.y, b.id, b.x, b.y, cd, b.angle)
 
     def _comp(a, b):
         return self.V[a].angle < self.V[b].angle
