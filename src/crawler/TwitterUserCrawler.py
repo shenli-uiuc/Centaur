@@ -6,6 +6,7 @@ except ImportError,e:
 import urllib2
 from MySQLDataStore import MySQLDataStore
 from RateLimit import RateLimit
+from URLHandler import URLHandler
 
 class TwitterUserCrawler:
 
@@ -13,11 +14,12 @@ class TwitterUserCrawler:
     urlUserLookup = "https://api.twitter.com/1/users/lookup.json?%s=%s"    
     dataStore = None
     rateLimit = None
-
+    urlHandler = None
 
     def __init__(self):
         self.dataStore = MySQLDataStore()
         self.rateLimit = RateLimit()
+        self.urlHandler = URLHandler()
 
     def get_user_info(self, screenNameArr, parameter = 'screen_name'):
         cur = 0
@@ -55,7 +57,9 @@ class TwitterUserCrawler:
         url = self.urlUserLookup%(self.parameters[parameter], strArr)
         print url
         self.rateLimit.check()
-        rawData = urllib2.urlopen(url)
+        rawData = self.urlHandler.open_url(url)
+        if not rawData:
+            return
         data = json.loads(rawData.read())
         res = {}
         for user in data:

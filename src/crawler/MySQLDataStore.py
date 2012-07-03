@@ -10,7 +10,7 @@ except ImportError,e:
 
 class MySQLDataStore:
 
-    badCharSet = ["'", '"']
+    badCharSet = ["'", '"', '\\']
     filename = None
     db = None
 
@@ -26,7 +26,7 @@ class MySQLDataStore:
 
     strSelectFollowerPiece = """SELECT follower_id FROM %s WHERE id = %d AND offset = %d"""
 
-    strSelectLocation = """SELECT location FROM %s WHERE id = %d"""
+    strSelectLocation = """SELECT location, screen_name FROM %s WHERE id = %d"""
 
     strSelectCurOffset = """SELECT offset from %s WHERE id = %d"""
     strUpdateCurOffset = """UPDATE %s SET offset = %d WHERE id = %d"""
@@ -68,9 +68,14 @@ class MySQLDataStore:
         rows = c.fetchall()
         c.close()
         if len(rows):
-            return rows[0][0]
+            if len(rows[0][0]) > 0:
+                return rows[0][0]
+            else:
+                return 'No Location'
         else:
             return None
+
+
 
 
     #get next_cursor to pull the follower id list from follower_id table
@@ -144,7 +149,7 @@ class MySQLDataStore:
         c.execute(cmd)
         rows = c.fetchall()
         if len(rows):
-            #print "user %s already exist!"%(screenName)
+            print "user %s already exist!"%(screenName)
             c.close()
             return
         #print location
