@@ -18,6 +18,7 @@ class MySQLDataStore:
     strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strInsert2Tweet = """INSERT INTO %s VALUES(%d, %d, '%s', '%s', %d, %d, %d)"""
+    strInsert2Address = """"""
 
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
