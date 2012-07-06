@@ -29,11 +29,11 @@ class RateLimit:
             except urllib2.HTTPError, e:
                 self.logFile.write(str(e.strerror, e.message))
                 count = count + 1
-                time.sleep(5)
+                time.sleep(30)
             except urllib2.URLError,e:
                 self.logFile.write(e.reason)
                 count = count + 1
-                time.sleep(5)
+                time.sleep(30)
 
     def _check_limit(self):
         url = self.urlCheckLimit
@@ -47,7 +47,7 @@ class RateLimit:
     def check(self):
         (limit, wakeup) = self._check_limit()
         while limit <= 0:
-            interval = wakeup - time.time() + 30
+            interval = max(0, wakeup - time.time()) + 30
             time.sleep(interval)
             (limit, wakeup) = self._check_limit()
 

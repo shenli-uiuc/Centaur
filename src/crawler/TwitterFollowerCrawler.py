@@ -24,7 +24,7 @@ class TwitterFollowerCrawler:
             location = self.mySQLDataStore.select_user_location(id)
             if not location:
                 res.append(id)
-        print "removed %d duplicate users"%(len(followerIDList) - len(res))
+        print "*******************removed %d duplicate users"%(len(followerIDList) - len(res))
         return res
 
     def handle_one_followee(self, screenName):
@@ -38,7 +38,9 @@ class TwitterFollowerCrawler:
             print "User %s has not started yet!"%(screenName)
             return
         #if curOffset < maxOffset: pull data from curOffset
+        print "before while"
         while curOffset < maxOffset:
+            print "In while"
             curOffset += 1
             strFollowers = self.mySQLDataStore.select_follower_piece(id, curOffset) 
             if not strFollowers:
@@ -46,7 +48,7 @@ class TwitterFollowerCrawler:
                 return
             listFollowers = json.loads(strFollowers)
             listFollowers = self.remove_duplication(listFollowers)
-            print (screenName, curOffset, maxOffset, len(listFollowers))
+            print ("++++++++++++++", screenName, curOffset, maxOffset, len(listFollowers))
             self.userCrawler.get_user_info(listFollowers, parameter = 'user_id')
             self.mySQLDataStore.update_cur_offset(id, curOffset) 
 

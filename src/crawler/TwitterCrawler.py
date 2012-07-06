@@ -4,6 +4,7 @@ import os
 import re
 import sys
 from MySQLDataStore import MySQLDataStore
+from URLHandler import URLHandler
 try:
     import json
 except ImportError,e:
@@ -22,10 +23,14 @@ class Crawler:
     # up to 100 users: returns a list, data[0]['name'] include_entities = true?
     urlUserInfo = "https://api.twitter.com/1/users/lookup.json?include_entities=true&screen_name=%s"
 
+    urlHandler = None
+
     def __init__(self, logName):
         self.logFile = open(logName,"w")
         self.db = MySQLDataStore()
-
+        self.urlHandler = URLHandler()
+    
+    """
     def open_url_followerID(self,url,screenName):
         count = 1
         while (count):
@@ -44,30 +49,17 @@ class Crawler:
                 #self.logFile.write(e.strerror)
                 count = count + 1
                 time.sleep(5)
-                
-    def open_url_limit(self,url):
-        count = 1
-        while (count):
-            if (count == 10):
-                self.logFile.write("Error in requesting: %s\n"%(url))
-                self.clean_up()
-                sys.exit()
-            try:
-                res = urllib2.urlopen(url)
-                return res
-            except urllib2.URLError,e:
-                self.logFile.write(e.strerror)
-                count = count + 1
-            
+    """        
  
     def check_limit(self):
         url = self.urlCheckLimit
-        res = self.open_url_limit(url)
+        res = self.urlHandler.open_url(url)
         data = json.loads(res.read())
         limit = data['remaining_hits']
         wakeup = data['reset_time_in_seconds']
         return (limit,wakeup)
 
+    """
     def get_user_info(self,follower_sname_list):
         #construct sname-list seperated by ,
         url = self.urlUserInfo
@@ -82,6 +74,7 @@ class Crawler:
         for i in range(len(follower_sname_list)):
             locations.append(data[i]['location'])
         return locations         
+    """
 
     def create_file(self,screenName,i):
         if not os.path.isdir("./"+screenName+"/"):
@@ -121,7 +114,7 @@ class Crawler:
         print ("Screen Name", screenName, "cursor", cursor)
         url = self.urlGetFollowerID%(cursor, screenName)
         print url
-        res = self.open_url_followerID(url,screenName) 
+        res = self.urlHandler.open_url(url)
         if res == None:
             print "Fatal Errors: follower id page return None!!!"
             self.logFile.write("Fatal Errors in requesting %s: %s\n",(screenName, url))
