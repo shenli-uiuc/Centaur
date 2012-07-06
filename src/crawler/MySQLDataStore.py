@@ -17,12 +17,16 @@ class MySQLDataStore:
     strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
     strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
+    strInsert2Tweet = """INSERT INTO %s VALUES(%d, %d, '%s', '%s', %d, %d, %d)"""
+
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
     strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
     strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and offset = %d"""
     strSelectMaxNCursor = """SELECT offset, next_cursor FROM %s WHERE id = %d AND offset = (SELECT MAX(offset) FROM follower_id WHERE id = %d)"""
     strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
+    strSelectMaxTweet = """SELECT MAX(tweet_id) from %s WHERE user_id = %d"""
+    strSelectMinTweet = """SELECT MIN(tweet_id) from %s WHERE user_id = %d"""
 
     strSelectFollowerPiece = """SELECT follower_id FROM %s WHERE id = %d AND offset = %d"""
 
@@ -60,6 +64,36 @@ class MySQLDataStore:
         else:
             return None
 
+    #get the max tweet id of one specific user in database
+    def select_max_tweet(self, userID):
+        c = self.db.cursor()
+        c.execute(self.strSelectMaxTweet%(db_conf.tweetTable, userID))
+        rows = c.fetchall()
+        c.close()
+        if rows[0][0]:
+            return int(rows[0][0])
+        else:
+            return 0
+
+    def select_min_tweet(self, userID):
+        c = self.db.cursor()
+        c.execute(self.strSelectMinTweet%(db_conf.tweetTable, userID))
+        rows = c.fetchall()
+        c.close()
+        if rows[0][0]:
+            return int(rows[0][0])
+        else:
+            return (2 ** 63) - 1
+
+
+    #insert one tweet into database
+    def insert_tweet(self, tweetID, userID, createdAt, text, retweetCount, retweeted, pullAt):
+        for c in self.badCharSet:
+            text = text.replace(c, '_')
+        c = self.db.cursor()
+        c.execute(self.strInsert2Tweet%(db_conf.tweetTable, tweetID, userID, createdAt, text, retweetCount, retweeted, pullAt))
+        c.close()
+        self.db.commit()
 
     #get the location from users table with the given user id
     def select_user_location(self, userID):

@@ -1,5 +1,6 @@
 import urllib2
 import time
+import httplib
 
 from RateLimit import RateLimit
 
@@ -25,12 +26,16 @@ class URLHandler:
                 print (url, count)
                 return res
             except urllib2.HTTPError, e:
-                print ("In URLHandler.open_url: ", e.code, e.strerror, e.message)
+                print ("In URLHandler.open_url: HTTPError", e.code, e.strerror, e.message)
                 if self.rateLimitError == e.code:
                     self.rateLimit.check()    
                 count = count + 1
                 time.sleep(self.sleepTime)
             except urllib2.URLError, e:
-                print ("In uRLHandler.open_url: ", e.reason)
+                print ("In URLHandler.open_url: URLError", e.reason)
+                count = count + 1
+                time.sleep(self.sleepTime)
+            except httplib.BadStatusLine, e:
+                print ("In URLHandler.open_url: BadStatusLine",e)
                 count = count + 1
                 time.sleep(self.sleepTime)
