@@ -18,7 +18,7 @@ class MySQLDataStore:
     strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strInsert2Tweet = """INSERT INTO %s VALUES(%d, %d, '%s', '%s', %d, %d, %d)"""
-    strInsert2Address = """"""
+    strInsert2Address = """INSERT INTO %s VALUE('%s', %d, %d, '%s', '%s')"""
 
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
@@ -28,6 +28,8 @@ class MySQLDataStore:
     strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
     strSelectMaxTweet = """SELECT MAX(tweet_id) from %s WHERE user_id = %d"""
     strSelectMinTweet = """SELECT MIN(tweet_id) from %s WHERE user_id = %d"""
+    strSelectUserLoc = """SELECT location from %s WHERE LENGTH(location) > 0 LIMIT 1 OFFSET %d"""
+    strSelectAddrLoc = """SELECT * from %s WHERE location = '%s'"""
 
     strSelectFollowerPiece = """SELECT follower_id FROM %s WHERE id = %d AND offset = %d"""
 
@@ -64,6 +66,41 @@ class MySQLDataStore:
             return rows[0][0]
         else:
             return None
+
+    #select on non-empty location
+    def select_user_location(self, offset):
+        c = self.db.cursor()
+        c.execute(self.strSelectUserLoc%(db_conf.userTable, offset))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return rows[0]
+        else:
+            return None
+
+    #select location from address table
+    def select_addr_location(self, location):
+        c = self.db.cursor()
+        c.execute(self.strSelectAddrLoc%(db_conf.userTable, location))
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return rows[0]
+        else:
+            return None
+
+
+    #insert one address
+    def insert_address(self, location, latitude, longitude, formatted, types):
+        for c in self.badCharSet:
+            formatted = formatted.replace(c, '_')
+
+        c = self.db.cursor()
+        c.execute(self.strInsert2Address%(db_conf.addressTable, location, latitude, longitude, formatted, types))
+        c.close()
+        self.db.commit()
+
+
 
     #get the max tweet id of one specific user in database
     def select_max_tweet(self, userID):
