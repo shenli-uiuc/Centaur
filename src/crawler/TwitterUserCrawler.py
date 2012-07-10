@@ -7,6 +7,7 @@ import urllib2
 from MySQLDataStore import MySQLDataStore
 from RateLimit import RateLimit
 from URLHandler import URLHandler
+import time
 
 class TwitterUserCrawler:
 
@@ -71,7 +72,7 @@ class TwitterUserCrawler:
             res[screenName]['id'] = user['id']
             res[screenName]['location'] = user['location']
             res[screenName]['followerNum'] = user['followers_count']
-
+        time.sleep(5)
         return res
             
          

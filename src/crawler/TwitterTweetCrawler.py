@@ -9,6 +9,8 @@ except ImportError,e:
 
 class TwitterTweetCrawler:
 
+    BAD_CHAR_SET = ['\n']
+
     MAX_TWEET_ID = (2 ** 63) - 1
     tweetCount = 200
     urlGetTweet = "https://api.twitter.com/1/statuses/user_timeline.json?user_id=%d&max_id=%d&count=%d"
@@ -24,7 +26,12 @@ class TwitterTweetCrawler:
         url = self.urlGetTweet%(userID, maxID, self.tweetCount)
         print url
         res = self.urlHandler.open_url(url)
-        tweets = json.loads(res.read())
+        data = res.read()
+        try:
+            tweets = json.loads(data)
+        except ValueError, e:
+            print e.message 
+            print data
         print len(tweets)
         maxID = self.MAX_TWEET_ID
         for tweet in tweets:
@@ -50,6 +57,8 @@ class TwitterTweetCrawler:
         while minID > 1:
             minID = self.get_tweet_piece(userID, minID) - 1
             print (userID, screenName, minID)
+        if minID >= 0:
+            self.mySQLDataStore.insert_tweet(-userID, userID, 0, '', 0, False, time.time())
 
 
 def main():

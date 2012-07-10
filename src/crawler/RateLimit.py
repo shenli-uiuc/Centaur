@@ -21,7 +21,7 @@ class RateLimit:
         while (count):
             if (count >= 10):
                 self.logFile.write("Error in requesting: %s\n"%(url))
-                self.clean_up()
+                self.close()
                 sys.exit()
             try:
                 res = urllib2.urlopen(url)
@@ -34,6 +34,11 @@ class RateLimit:
                 self.logFile.write(e.reason)
                 count = count + 1
                 time.sleep(30)
+            except httplib.BadStatusLine, e:
+                print ("In URLHandler.open_url: BadStatusLine",e)
+                count = count + 1
+                time.sleep(self.sleepTime)
+
 
     def _check_limit(self):
         url = self.urlCheckLimit
