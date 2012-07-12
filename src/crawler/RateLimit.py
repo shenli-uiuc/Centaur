@@ -5,6 +5,7 @@ except ImportError,e:
 
 import time
 import urllib2
+import httplib
 
 class RateLimit:
 
@@ -12,6 +13,8 @@ class RateLimit:
     logFileName = 'rateLimit.log' 
 
     urlCheckLimit = "https://api.twitter.com/1/account/rate_limit_status.json"
+
+    sleepTime = 30
 
     def __init__(self):
         self.logFile = open(self.logFileName, 'w')
@@ -27,13 +30,13 @@ class RateLimit:
                 res = urllib2.urlopen(url)
                 return res
             except urllib2.HTTPError, e:
-                self.logFile.write(str(e.strerror, e.message))
+                self.logFile.write(str((e.strerror, e.message)))
                 count = count + 1
-                time.sleep(30)
+                time.sleep(self.sleepTime)
             except urllib2.URLError,e:
                 self.logFile.write(e.reason)
                 count = count + 1
-                time.sleep(30)
+                time.sleep(self.sleepTime)
             except httplib.BadStatusLine, e:
                 print ("In URLHandler.open_url: BadStatusLine",e)
                 count = count + 1

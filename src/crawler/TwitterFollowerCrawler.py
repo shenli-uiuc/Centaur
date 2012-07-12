@@ -6,6 +6,7 @@ except ImportError,e:
 from MySQLDataStore import MySQLDataStore
 from RateLimit import RateLimit
 from TwitterUserCrawler import TwitterUserCrawler
+import httplib
 
 #crawls follower details: location, screen name, id
 class TwitterFollowerCrawler:

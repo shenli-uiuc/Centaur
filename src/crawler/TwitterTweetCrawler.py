@@ -5,6 +5,8 @@ try:
     import json
 except ImportError,e:
     import simplejson as json
+import sys
+
 
 
 class TwitterTweetCrawler:
@@ -32,6 +34,7 @@ class TwitterTweetCrawler:
         except ValueError, e:
             print e.message 
             print data
+            sys.exit(0)
         print len(tweets)
         maxID = self.MAX_TWEET_ID
         for tweet in tweets:
@@ -57,7 +60,7 @@ class TwitterTweetCrawler:
         while minID > 1:
             minID = self.get_tweet_piece(userID, minID) - 1
             print (userID, screenName, minID)
-        if minID >= 0:
+        if minID >= -1:
             self.mySQLDataStore.insert_tweet(-userID, userID, 0, '', 0, False, time.time())
 
 

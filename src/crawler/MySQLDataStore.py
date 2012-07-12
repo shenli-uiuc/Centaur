@@ -1,3 +1,7 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+
 import MySQLdb
 
 import db_conf
@@ -18,7 +22,7 @@ class MySQLDataStore:
     strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, %d, '%s')"""
     strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
     strInsert2Tweet = """INSERT INTO %s VALUES(%d, %d, '%s', '%s', %d, %d, %d)"""
-    strInsert2Address = """INSERT INTO %s VALUE('%s', %d, %d, '%s', '%s')"""
+    strInsert2Address = """INSERT IGNORE INTO %s VALUE('%s', %f, %f, '%s', '%s')"""
 
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
@@ -28,8 +32,9 @@ class MySQLDataStore:
     strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
     strSelectMaxTweet = """SELECT MAX(tweet_id) from %s WHERE user_id = %d"""
     strSelectMinTweet = """SELECT MIN(tweet_id) from %s WHERE user_id = %d"""
-    strSelectUserLoc = """SELECT location from %s WHERE LENGTH(location) > 0 LIMIT 1 OFFSET %d"""
+    strSelectUserLoc = """SELECT DISTINCT location from %s WHERE LENGTH(location) > 0 AND location != 'None' LIMIT 1 OFFSET %d"""
     strSelectAddrLoc = """SELECT * from %s WHERE location = '%s'"""
+    strSelectUserCnt = """SELECT COUNT(*) from %s WHERE LENGTH(location) > 0 AND location != 'None'"""
 
     strSelectFollowerPiece = """SELECT follower_id FROM %s WHERE id = %d AND offset = %d"""
 
@@ -68,20 +73,29 @@ class MySQLDataStore:
             return None
 
     #select on non-empty location
-    def select_user_location(self, offset):
+    def select_user_location_offset(self, offset):
         c = self.db.cursor()
         c.execute(self.strSelectUserLoc%(db_conf.userTable, offset))
         rows = c.fetchall()
         c.close()
-        if len(rows):
-            return rows[0]
+        if len(rows[0][0]):
+            return rows[0][0]
         else:
             return None
 
+    #get the number of users in users table
+    def select_user_count(self):
+        c = self.db.cursor()
+        c.execute(self.strSelectUserCnt%(db_conf.userTable))
+        rows = c.fetchall()
+        c.close()
+        return int(rows[0][0])
+
     #select location from address table
     def select_addr_location(self, location):
+        location = unicode(location, 'latin-1')
         c = self.db.cursor()
-        c.execute(self.strSelectAddrLoc%(db_conf.userTable, location))
+        c.execute(self.strSelectAddrLoc%(db_conf.addressTable, location))
         rows = c.fetchall()
         c.close()
         if len(rows):
@@ -90,10 +104,13 @@ class MySQLDataStore:
             return None
 
 
+
     #insert one address
     def insert_address(self, location, latitude, longitude, formatted, types):
-        for c in self.badCharSet:
-            formatted = formatted.replace(c, '_')
+        location = unicode(location, 'latin-1')
+        if formatted:
+            for c in self.badCharSet:
+                formatted = formatted.replace(c, '_')
 
         c = self.db.cursor()
         c.execute(self.strInsert2Address%(db_conf.addressTable, location, latitude, longitude, formatted, types))
