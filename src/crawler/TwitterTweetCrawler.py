@@ -23,18 +23,24 @@ class TwitterTweetCrawler:
         self.urlHandler = URLHandler()
         self.mySQLDataStore = MySQLDataStore()
 
+    def dump_resp(self, url):
+        retry = True
+        while retry:
+            try:
+                retry = False
+                rawData = self.urlHandler.open_url(url)
+                data = json.loads(rawData.read())
+                return data
+            except ValueError, e:
+                print ("ValueError: ",  e.message)
+                retry = True
+
+
     def get_tweet_piece(self, userID, maxID):
         print ("get_tweet_piece", userID, maxID) 
         url = self.urlGetTweet%(userID, maxID, self.tweetCount)
         print url
-        res = self.urlHandler.open_url(url)
-        data = res.read()
-        try:
-            tweets = json.loads(data)
-        except ValueError, e:
-            print e.message 
-            print data
-            sys.exit(0)
+        tweets = self.dump_resp(url)
         print len(tweets)
         maxID = self.MAX_TWEET_ID
         for tweet in tweets:

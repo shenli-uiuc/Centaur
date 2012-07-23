@@ -18,22 +18,22 @@ class MySQLDataStore:
     filename = None
     db = None
 
-    strInsert2User = """INSERT INTO %s VALUES(%d, '%s', %d, '%s')"""
-    strInsert2Follower = """INSERT INTO %s VALUES(%d, %d, %d, %d, '%s')"""
-    strInsert2Data = """INSERT INTO %s VALUES(%d, '%s', '%s', '%s')"""
-    strInsert2Tweet = """INSERT INTO %s VALUES(%d, %d, '%s', '%s', %d, %d, %d)"""
-    strInsert2Address = """INSERT IGNORE INTO %s VALUE('%s', %f, %f, '%s', '%s')"""
+    strInsert2User = """INSERT INTO users VALUES(%s, %s, %s, %s)"""
+    strInsert2Follower = """INSERT INTO follower_id VALUES(%s, %s, %s, %s, %s)"""
+    strInsert2Data = """INSERT INTO twitter_data VALUES(%s, %s, %s, %s)"""
+    strInsert2Tweet = """INSERT INTO tweet VALUES(%s, %s, %s, %s, %d, %d, %d)"""
+    strInsert2Address = """INSERT IGNORE INTO address VALUE(%s, %s, %s, %s, %s)"""
 
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
-    strSelectIDByName = """SELECT id FROM %s WHERE screen_name='%s'"""
+    strSelectIDByName = """SELECT id FROM users WHERE screen_name=%s"""
     strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and offset = %d"""
     strSelectMaxNCursor = """SELECT offset, next_cursor FROM %s WHERE id = %d AND offset = (SELECT MAX(offset) FROM follower_id WHERE id = %d)"""
     strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
     strSelectMaxTweet = """SELECT MAX(tweet_id) from %s WHERE user_id = %d"""
     strSelectMinTweet = """SELECT MIN(tweet_id) from %s WHERE user_id = %d"""
     strSelectUserLoc = """SELECT DISTINCT location from %s WHERE LENGTH(location) > 0 AND location != 'None' LIMIT 1 OFFSET %d"""
-    strSelectAddrLoc = """SELECT * from %s WHERE location = '%s'"""
+    strSelectAddrLoc = """SELECT * from address WHERE location = %s"""
     strSelectUserCnt = """SELECT COUNT(*) from %s WHERE LENGTH(location) > 0 AND location != 'None'"""
 
     strSelectFollowerPiece = """SELECT follower_id FROM %s WHERE id = %d AND offset = %d"""
@@ -50,7 +50,7 @@ class MySQLDataStore:
     #deprecated
     def store(self, userID, screenName, followerID, location):
         c = self.db.cursor()
-        c.execute(self.strInsert2Data%(db_conf.dataTable, userID, screenName, json.dumps(followerID), location))
+        c.execute(self.strInsert2Data, (userID, screenName, json.dumps(followerID), location))
 
         # To improve efficiency, the commit function should be used in a batched way
         self.db.commit()
@@ -58,7 +58,7 @@ class MySQLDataStore:
 
     def store_follower_piece(self, userID, offset, pCursor, nCursor, followerID):
         c = self.db.cursor()
-        c.execute(self.strInsert2Follower%(db_conf.followerTable, userID, offset, pCursor, nCursor, json.dumps(followerID)))
+        c.execute(self.strInsert2Follower, (userID, offset, pCursor, nCursor, json.dumps(followerID)))
         self.db.commit()
         c.close() 
 
@@ -95,7 +95,7 @@ class MySQLDataStore:
     def select_addr_location(self, location):
         location = unicode(location, 'latin-1')
         c = self.db.cursor()
-        c.execute(self.strSelectAddrLoc%(db_conf.addressTable, location))
+        c.execute(self.strSelectAddrLoc, (location))
         rows = c.fetchall()
         c.close()
         if len(rows):
@@ -113,7 +113,7 @@ class MySQLDataStore:
                 formatted = formatted.replace(c, '_')
 
         c = self.db.cursor()
-        c.execute(self.strInsert2Address%(db_conf.addressTable, location, latitude, longitude, formatted, types))
+        c.execute(self.strInsert2Address, (location, latitude, longitude, formatted, types))
         c.close()
         self.db.commit()
 
@@ -146,7 +146,7 @@ class MySQLDataStore:
         for c in self.badCharSet:
             text = text.replace(c, '_')
         c = self.db.cursor()
-        c.execute(self.strInsert2Tweet%(db_conf.tweetTable, tweetID, userID, createdAt, text, retweetCount, retweeted, pullAt))
+        c.execute(self.strInsert2Tweet, (userID, createdAt, text, retweetCount, retweeted, pullAt))
         c.close()
         self.db.commit()
 
@@ -157,7 +157,7 @@ class MySQLDataStore:
         rows = c.fetchall()
         c.close()
         if len(rows):
-            if len(rows[0][0]) > 0:
+            if rows[0][0] and len(rows[0][0]) > 0:
                 return rows[0][0]
             else:
                 return 'No Location'
@@ -244,9 +244,9 @@ class MySQLDataStore:
         #print location
         location = self._validate_str(location)
         #print location
-        cmd = self.strInsert2User%(db_conf.userTable, userID, screenName, followerNum, location)
+        #cmd = self.strInsert2User%(db_conf.userTable, userID, screenName, followerNum, location)
         #print cmd
-        c.execute(cmd)
+        c.execute(self.strInsert2User, (userID, screenName, followerNum, location))
         self.db.commit()
         c.close()
 
@@ -274,7 +274,7 @@ class MySQLDataStore:
 
     def get_one_id(self, screenName):
         c = self.db.cursor()
-        c.execute(self.strSelectIDByName%(db_conf.userTable, screenName))
+        c.execute(self.strSelectIDByName, (screenName))
         rows = c.fetchall()
         c.close()
         if len(rows):

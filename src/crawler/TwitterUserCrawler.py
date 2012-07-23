@@ -45,6 +45,21 @@ class TwitterUserCrawler:
             self.dataStore.store_user(id, screenName, folNum, loc)
 
 
+    def dump_resp(self, url):
+        retry = True
+        while retry:
+            try:
+                retry = False
+                rawData = self.urlHandler.open_url(url)
+                if not rawData:
+                    return
+                data = json.loads(rawData.read())
+                return data
+            except ValueError, e:
+                print ("ValueError: ",  e.message)
+                retry = True
+
+
     def get_100_user_info(self, screenNameArr, parameter):
         if len(screenNameArr) > 100:
             print "TwitterUserCrawler:get_100_user_info accepts at most 100 screen names"
@@ -57,11 +72,9 @@ class TwitterUserCrawler:
         strArr = ''.join(strArr.split('"'))
         url = self.urlUserLookup%(self.parameters[parameter], strArr)
         print url
-        self.rateLimit.check()
-        rawData = self.urlHandler.open_url(url)
-        if not rawData:
+        data = self.dump_resp(url)
+        if not data:
             return
-        data = json.loads(rawData.read())
         res = {}
         for user in data:
             if 'errors' in user.keys():
