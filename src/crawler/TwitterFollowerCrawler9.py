@@ -58,11 +58,12 @@ class TwitterFollowerCrawler:
             self.handle_one_followee(screenName)
 
 def main():
-    f = open('sample5.txt', 'r')
+    f = open('sample.txt', 'r')
     names = []
     for line in f:
         names.append(line.split('\n')[0])
-
+    names.reverse()
+    names = ['YouTube', 'NICKIMINAJ', 'Oprah', 'jtimberlake', 'TheEllenShow', 'selenagomez']
 
     crawler = TwitterFollowerCrawler();
     crawler.handle_all_followee(names)

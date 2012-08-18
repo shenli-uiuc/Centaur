@@ -33,8 +33,8 @@ class RateLimit:
                 self.logFile.write(str((e.strerror, e.message)))
                 count = count + 1
                 time.sleep(self.sleepTime)
-            except urllib2.URLError,e:
-                self.logFile.write(e.reason)
+            except urllib2.URLError, e:
+                print ("In RateLimit._open_url_limit: URLError", e.reason)
                 count = count + 1
                 time.sleep(self.sleepTime)
             except httplib.BadStatusLine, e:

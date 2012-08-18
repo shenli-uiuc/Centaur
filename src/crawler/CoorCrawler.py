@@ -9,14 +9,14 @@ class CoorCrawler:
 
     INFTY = 99999
 
-    offset = 0
-    filename = "loc_offset.txt"
+    filename = "prev_loc.txt"
     googleGeo = None
     dataStore = None
+    loc = None
 
     def __init__(self):
         f = open(self.filename, 'r')
-        self.offset = int(f.readline())
+        self.loc = ''.join(f.readlines())
         f.close()
         self.googleGeo = GoogleGeo()
         self.dataStore = MySQLDataStore()
@@ -24,22 +24,21 @@ class CoorCrawler:
     def get_address(self):
         cnt = self.dataStore.select_user_count()
         print ("count: ", cnt)
-        while self.offset < cnt:
-            self.offset += 1
-            print ("offset: ", self.offset)
+        while True:
             f = open(self.filename, 'w')
-            f.write("%d\n"%(self.offset))
+            f.write(self.loc)
             f.close()
-            loc = self.dataStore.select_user_location_offset(self.offset)
-            print loc
-            if not loc:
+            self.loc = self.dataStore.select_user_location_offset(self.loc)
+            print 
+            if not self.loc:
                 print ("in not loc")
-                continue
-            tmp = self.dataStore.select_addr_location(loc)
+                print ("done with current locations")
+                break
+            tmp = self.dataStore.select_addr_location(self.loc)
             if tmp:
                 print ("in address", tmp)
                 continue
-            res = self.googleGeo.get_coordination(loc)
+            res = self.googleGeo.get_coordination(self.loc)
             if res:
                 (lati, long, formatted, types) = res
             else:
@@ -48,8 +47,8 @@ class CoorCrawler:
                 formatted = None
                 types = "None"
 
-            print  (loc, lati, long, formatted, types)
-            self.dataStore.insert_address(loc, lati, long, formatted, types)
+            print  (self.loc, lati, long, formatted, types)
+            self.dataStore.insert_address(self.loc, lati, long, formatted, types)
              
                 
 

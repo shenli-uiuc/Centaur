@@ -32,7 +32,7 @@ class MySQLDataStore:
     strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
     strSelectMaxTweet = """SELECT MAX(tweet_id) from %s WHERE user_id = %d"""
     strSelectMinTweet = """SELECT MIN(tweet_id) from %s WHERE user_id = %d"""
-    strSelectUserLoc = """SELECT DISTINCT location from %s WHERE LENGTH(location) > 0 AND location != 'None' LIMIT 1 OFFSET %d"""
+    strSelectUserLoc = """SELECT location from users WHERE LENGTH(location) > 0 AND location != 'None' AND location > %s ORDER BY location LIMIT 1"""
     strSelectAddrLoc = """SELECT * from address WHERE location = %s"""
     strSelectUserCnt = """SELECT COUNT(*) from %s WHERE LENGTH(location) > 0 AND location != 'None'"""
 
@@ -73,9 +73,9 @@ class MySQLDataStore:
             return None
 
     #select on non-empty location
-    def select_user_location_offset(self, offset):
+    def select_user_location_offset(self, prev_loc):
         c = self.db.cursor()
-        c.execute(self.strSelectUserLoc%(db_conf.userTable, offset))
+        c.execute(self.strSelectUserLoc, (prev_loc))
         rows = c.fetchall()
         c.close()
         if len(rows[0][0]):
