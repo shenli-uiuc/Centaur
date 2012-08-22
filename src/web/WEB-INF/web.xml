@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app>
+    <servlet>
+        <servlet-name>PeerIDListener</servlet-name>
+        <servlet-class>centaur.PeerIDListener</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>PeerIDListener</servlet-name>
+        <url-pattern>/PeerIDListener</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+

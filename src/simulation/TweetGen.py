@@ -1,0 +1,2 @@
+class TweetGen:
+    pass

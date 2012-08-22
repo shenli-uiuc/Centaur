@@ -28,13 +28,20 @@ class TwitterUserCrawler:
         print ("get_user_info: ", parameter)
         while next < len(screenNameArr):
             res = self.get_100_user_info(screenNameArr[cur:next], parameter)
-            self.store_users(res)
+            if res:
+                self.store_users(res)
+            else:
+                f = open(str(time.time()), "w")
+                f.write(str(screenNameArr[cur:next]))
+                f.write("\n")
+                f.close()
             cur = next
             next += 100
 
         if cur < len(screenNameArr):
             res = self.get_100_user_info(screenNameArr[cur:len(screenNameArr)], parameter)
-            self.store_users(res)
+            if res:
+                self.store_users(res)
 	    
 
     def store_users(self, dictData):

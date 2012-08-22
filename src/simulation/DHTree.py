@@ -1,5 +1,6 @@
 from NodeGenerator import NodeGenerator
 import math
+import random
 
 try:
     import json
@@ -18,14 +19,10 @@ class DHTree:
     treeSizes = None
 
 
-    def __init__(self, d, h, alpha, coors):
-        self.d = d
-        self.h = h
-        self.alpha = alpha
+    def __init__(self, coors):
         self.V = []
         self.treeSizes = []
         self._init_vertices(coors)
-        self._init_tree_sizes()
 
     def _init_vertices(self, coors):
         cnt = 0
@@ -38,71 +35,114 @@ class DHTree:
         for i in range(self.h + 1):
             self.treeSizes.append((self.d ** i - 1) / (self.d - 1))
 
-    def build_tree(self, index, r, curH = 'root'):
-        indexLen = len(index)
+
+    def get_tree(self, alpha, beta, d, h):
+        self.d = d
+        self.h = h
+        self.alpha = alpha
+        self.beta = beta
+        index = range(1, len(self.V))
+        self._init_tree_sizes()
+        self.build_tree(index, self.V[0], self.h) 
+
+    def build_tree(self, index, r, curH):
+        print (r.id, index)
         r.used = True
-        #print (begin, end, r, curH)
-        if 'root' == curH:
-            curH = self.h
-        if curH <= 2 or len(index) <= self.d:
-            #print "in curH <= 2"
+        indexLen = len(index)        
+
+        #we are not enforcing the DHTree to stay lower than self.h by using the curH parameter (the previous implementation still uses curH parameter because there might be used nodes in the index list)
+        print ("see tree size:", indexLen, curH, self.treeSizes[curH-1])
+        if len(index) <= self.d:
             for i in range(indexLen):
-                if not self.V[index[i]].used:
-                    self.V[index[i]].used = True
-                    r.cList.append(index[i])
-                    self.print_info(r, self.V[index[i]], 0)
+                #in the sorting phase, we should enforce that all nodes in the index array are un-used
+                if self.V[index[i]].used:
+                    print "WRONG: why used!?"
+                self.V[index[i]].used = True
+                r.cList.append(self.V[index[i]])
+                self.print_info(r, self.V[index[i]], 0)
             return
+
+        if curH == self.h:
+            #we are doing with root (DC), hence we can have much more children here. Actually, the number of children of the DC should be calculated with curH
+            alpha = self.beta
+        else:
+            alpha = self.alpha
 
         for i in range(indexLen):
             u = self.V[index[i]]
             u.angle = self.get_angle(u.x, u.y, r.x, r.y)
 
         index.sort(key = lambda i: self.V[i].angle)
-        """
-        for i in index:
-            print (i, self.V[i].x, self.V[i].y, self.V[i].angle)
 
-        exit(0)
-        """
+
         tmpAngle = 0
-        cnt = 0
-        cv = -1
-        cd = self.INFTY
         curIndex = []
+        cvi = -1
+        cnt = 0
+        cd = self.INFTY
         for i in range(indexLen):
             u = self.V[index[i]]
-            if u.used and not u == r:
-                print "WRONG"
-            if u.angle - tmpAngle >= self.alpha or cnt >= self.treeSizes[curH - 1]:
-                #if i + 1 >= indexLen and u.angle - tmpAngle < self.alpha and cnt < self.treeSizes[curH-1]:
-                #    curIndex.append(index[i])
-                if len(curIndex):
-                    r.cList.append(cv)
-                    self.print_info(r, self.V[cv], cd)
-                    self.build_tree(curIndex,  self.V[cv], curH - 1)
-                    cnt = 0
-                    curIndex = []
-                cd = self.INFTY
-                cv = -1
+            if u.used:
+                print "Wrong2: why used!?"
+
+            #if no nodes in some region, the angle should be skipped
+            if 0 >= len(curIndex):
                 tmpAngle = u.angle
 
 
-            if not u.used:
-                curIndex.append(index[i])
-                tmpD = self.get_dist(u.x, u.y, r.x, r.y)
-                if tmpD < cd:
-                    cd = tmpD
-                    cv = index[i]
-                cnt += 1
+            """
+            The root (DC) choose a random node as children. All other internal nodes choose the nearest node as children.
+            in both case we should remember the index in the index array, so that we can do the swap latter 
+            """
+            if u.angle-tmpAngle > alpha or cnt > self.treeSizes[curH - 1]: #last condition is the corner case
+                print (u.angle, tmpAngle, alpha, cnt, self.treeSizes[curH - 1], curH, i, indexLen)
+                if curH == self.h:
+                    cvi = random.randint(0, len(curIndex) - 1)   
 
-            if i + 1 >= indexLen and u.used:
-                print "WRONG!!"
-                
+                tmp = curIndex[cvi]
+                curIndex[cvi] = curIndex[0]
+                curIndex[0] = tmp
+
+                r.cList.append(self.V[curIndex[0]])  #connecting the tree
+                if len(curIndex) > 1:
+                    self.build_tree(curIndex[1:], self.V[curIndex[0]], curH - 1)        
+                else:
+                    self.V[curIndex[0]].used = True 
+                cnt = 0
+                curIndex = []
+                cvi = -1
+                tmpAngle = u.angle
+                cd = self.INFTY
+
+            curIndex.append(index[i])
+            tmpD = self.get_dist(u.x, u.y, r.x, r.y)
+            if tmpD < cd:
+                cd = tmpD
+                cvi = cnt #index in the curIndex array
+            cnt += 1
+
             if i + 1 >= indexLen:
-                r.cList.append(cv)
-                self.print_info(r, self.V[cv], cd)
-                self.build_tree(curIndex, self.V[cv], curH - 1)
-                break
+                if curH == self.h:
+                    cvi = random.randint(0, len(curIndex) - 1)
+
+                tmp = curIndex[cvi]
+                curIndex[cvi] = curIndex[0]
+                curIndex[0] = tmp
+
+                r.cList.append(self.V[curIndex[0]])  #connecting the tree
+                if len(curIndex) > 1:
+                    self.build_tree(curIndex[1:], self.V[curIndex[0]], curH - 1)
+                else:
+                    self.V[curIndex[0]].used = True
+
+            """
+            curIndex.append(index[i])
+            tmpD = self.get_dist(u.x, u.y, r.x, r.y)
+            if tmpD < cd:
+                cd = tmpD
+                cvi = cnt #index in the curIndex array
+            """
+
 
     def print_info(self, a, b, cd):
         print "%d(%f, %f) connects %d(%f, %f), at distance %f(%f), angle"%(a.id, a.x, a.y, b.id, b.x, b.y, cd, b.angle)
@@ -112,7 +152,7 @@ class DHTree:
 
 
     def get_dist(self, x1, y1, x2, y2):
-        return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        return math.sqrt((x1 - float(x2)) ** 2 + (y1 - float(y2)) ** 2)
 
     #non-root node comes first
     def get_angle(self, x1, y1, x2, y2):
@@ -120,7 +160,7 @@ class DHTree:
             if x1 > x2:
                 return math.pi / 2
             elif x1 < x2:
-                return math.pi * (3/2)
+                return math.pi * (3/2.0)
             else:
                 return 0
  
@@ -157,8 +197,9 @@ class DHTree:
 
         for v in self.V:
             for c in v.cList:
-                f.write("%d %d\n"%(v.id, c))
+                f.write("%d %d\n"%(v.id, c.id))
         f.close()
+
 
 class Vertex:
     id = 0
@@ -186,10 +227,9 @@ class Vertex:
 
 def main():
     nodeGenerator = NodeGenerator()
-    coors = nodeGenerator.gen(10, 100) 
-    tree = DHTree(2, 7, math.pi / 3, coors)
-    index = range(len(coors))
-    tree.build_tree(index, r = tree.V[0])
+    coors = nodeGenerator.gen(10, 200) 
+    tree = DHTree(coors)
+    tree.get_tree(math.pi / 3, math.pi / 4, 2, 7)
     tree.print_tree()
     tree.store_vertices('vertices')
     tree.store_edges('edges')
