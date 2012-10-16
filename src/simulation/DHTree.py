@@ -44,11 +44,13 @@ class DHTree:
         index = range(1, len(self.V))
         self._init_tree_sizes()
         self.build_tree(index, self.V[0], self.h) 
+        return self.V[0]
 
     def build_tree(self, index, r, curH):
         print (r.id, index)
         r.used = True
-        indexLen = len(index)        
+        indexLen = len(index)  
+        r.subTreeSize = indexLen      
 
         #we are not enforcing the DHTree to stay lower than self.h by using the curH parameter (the previous implementation still uses curH parameter because there might be used nodes in the index list)
         print ("see tree size:", indexLen, curH, self.treeSizes[curH-1])
@@ -208,6 +210,7 @@ class Vertex:
     angle = 0
     cList = []
     used = False
+    subTreeSize = 0
 
     def __init__(self, id, x, y):
         self.id = id

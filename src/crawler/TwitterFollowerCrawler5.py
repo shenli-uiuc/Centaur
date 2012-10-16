@@ -22,11 +22,11 @@ class TwitterFollowerCrawler:
     def remove_duplication(self, followerIDList):
         res = []
         for id in followerIDList:
-            location = self.mySQLDataStore.select_user_location(id)
-            if not location:
+            if not self.mySQLDataStore.check_user_by_id(id):
                 res.append(id)
         print "*******************removed %d duplicate users"%(len(followerIDList) - len(res))
         return res
+
 
     def handle_one_followee(self, screenName):
         #get id from users table for the screenName
@@ -48,7 +48,7 @@ class TwitterFollowerCrawler:
                 print "Piece %d %d is missing!"%(id, curOffset)
                 return
             listFollowers = json.loads(strFollowers)
-            listFollowers = self.remove_duplication(listFollowers)
+#            listFollowers = self.remove_duplication(listFollowers)
             print ("++++++++++++++", screenName, curOffset, maxOffset, len(listFollowers))
             self.userCrawler.get_user_info(listFollowers, parameter = 'user_id')
             self.mySQLDataStore.update_cur_offset(id, curOffset) 
@@ -63,7 +63,7 @@ def main():
     for line in f:
         names.append(line.split('\n')[0])
     names.reverse()
-    names = ['ParisHilton']
+    names = ['ParisHilton','cnnbrk','Drake', 'kanyewest']
 
     crawler = TwitterFollowerCrawler();
     crawler.handle_all_followee(names)

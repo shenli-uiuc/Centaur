@@ -4,6 +4,7 @@ CREATE TABLE users_complete(
     follower_count BIGINT,
     friend_count BIGINT,
     status_count BIGINT,
+    favor_count BIGINT,
     verified BOOLEAN,
     created_at VARCHAR(50),
     location VARCHAR(50), 
@@ -14,5 +15,6 @@ CREATE TABLE users_complete(
     INDEX (follower_count),
     INDEX (friend_COUNT),
     INDEX (status_count),
-    INDEX (verified)
+    INDEX (verified),
+    INDEX (favor_count)
 )ENGINE=MyISAM CHARACTER SET=binary;

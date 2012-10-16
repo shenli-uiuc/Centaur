@@ -22,8 +22,8 @@ class CoorCrawler:
         self.dataStore = MySQLDataStore()
 
     def get_address(self):
-        cnt = self.dataStore.select_user_count()
-        print ("count: ", cnt)
+        #cnt = self.dataStore.select_user_count()
+        #print ("count: ", cnt)
         while True:
             f = open(self.filename, 'w')
             f.write(self.loc)

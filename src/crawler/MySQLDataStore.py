@@ -18,7 +18,7 @@ class MySQLDataStore:
     filename = None
     db = None
 
-    strInsert2User = """INSERT INTO users VALUES(%s, %s, %s, %s)"""
+    strInsert2User = """INSERT INTO users_complete VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
     strInsert2Follower = """INSERT INTO follower_id VALUES(%s, %s, %s, %s, %s)"""
     strInsert2Data = """INSERT INTO twitter_data VALUES(%s, %s, %s, %s)"""
     strInsert2Tweet = """INSERT INTO tweet VALUES(%s, %s, %s, %s, %d, %d, %d)"""
@@ -26,7 +26,7 @@ class MySQLDataStore:
 
     strSelectByID  = """SELECT * FROM %s WHERE id = %d"""
     strSelectAllID = """SELECT id FROM %s"""
-    strSelectIDByName = """SELECT id FROM users WHERE screen_name=%s"""
+    strSelectIDByName = """SELECT id FROM users_complete WHERE screen_name=%s"""
     strSelectNCursor = """SELECT next_cursor from %s WHERE id = %d and offset = %d"""
     strSelectMaxNCursor = """SELECT offset, next_cursor FROM %s WHERE id = %d AND offset = (SELECT MAX(offset) FROM follower_id WHERE id = %d)"""
     strSelectMaxOffset = """SELECT MAX(offset) FROM %s WHERE id = %d"""    
@@ -232,9 +232,22 @@ class MySQLDataStore:
             rawStr = rawStr.replace(c, '_')
         return rawStr
 
-    def store_user(self, userID, screenName, followerNum, location):
+    def check_user_by_id(self, userID):
         c = self.db.cursor()
-        cmd = self.strSelectByID%(db_conf.userTable, userID)
+        cmd = self.strSelectByID%(db_conf.userTableComplete, userID)
+        c.execute(cmd)
+        rows = c.fetchall()
+        c.close()
+        if len(rows):
+            return True
+        else:
+            return False
+
+
+    def store_user(self, userID, screenName, followerNum, followeeNum, statusNum, favorNum, verified, createdAt, location):
+    #def store_user(self, userID, screenName, followerNum, location):
+        c = self.db.cursor()
+        cmd = self.strSelectByID%(db_conf.userTableComplete, userID)
         c.execute(cmd)
         rows = c.fetchall()
         if len(rows):
@@ -246,7 +259,7 @@ class MySQLDataStore:
         #print location
         #cmd = self.strInsert2User%(db_conf.userTable, userID, screenName, followerNum, location)
         #print cmd
-        c.execute(self.strInsert2User, (userID, screenName, followerNum, location))
+        c.execute(self.strInsert2User, (userID, screenName, followerNum, followeeNum, statusNum, favorNum, verified, createdAt, location))
         self.db.commit()
         c.close()
 

@@ -1,4 +1,4 @@
-CREATE TABLE tmp_offset(
+CREATE TABLE tmp_offset_complete(
     id BIGINT,
     offset BIGINT,
 
