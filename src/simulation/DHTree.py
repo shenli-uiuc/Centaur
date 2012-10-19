@@ -7,7 +7,7 @@ try:
 except ImportError, e:
     import simplejson as json
 
-
+#TODO: give Vertex a real id, rather than a count
 class DHTree:
 
     INFTY = 999999999
@@ -54,7 +54,10 @@ class DHTree:
 
         #we are not enforcing the DHTree to stay lower than self.h by using the curH parameter (the previous implementation still uses curH parameter because there might be used nodes in the index list)
         print ("see tree size:", indexLen, curH, self.treeSizes[curH-1])
-        if len(index) <= self.d:
+        """
+        The first condition guarantees that even if the number of receivers is small, the data center will also take advantage of the multicasting
+        """
+        if (not curH == self.h) and len(index) <= self.d: 
             for i in range(indexLen):
                 #in the sorting phase, we should enforce that all nodes in the index array are un-used
                 if self.V[index[i]].used:
@@ -96,7 +99,7 @@ class DHTree:
             The root (DC) choose a random node as children. All other internal nodes choose the nearest node as children.
             in both case we should remember the index in the index array, so that we can do the swap latter 
             """
-            if u.angle-tmpAngle > alpha or cnt > self.treeSizes[curH - 1]: #last condition is the corner case
+            if u.angle-tmpAngle > alpha or cnt > self.treeSizes[curH - 1]:
                 print (u.angle, tmpAngle, alpha, cnt, self.treeSizes[curH - 1], curH, i, indexLen)
                 if curH == self.h:
                     cvi = random.randint(0, len(curIndex) - 1)   

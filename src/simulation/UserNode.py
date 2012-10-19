@@ -1,4 +1,5 @@
 from MyQueue import PQueue, FQueue
+import Util
 
 class UserNode:
 
@@ -15,6 +16,8 @@ class UserNode:
 
     #node failing rate
     pFail = 0
+    isWorking = True
+    #TODO: consider the failure
 
     #coordination
     x = 0
@@ -32,6 +35,7 @@ class UserNode:
     def UserNode(self, netIn, netOut, pFail, sharedStat, id, x, y):
         self.inBuf = PQueue()
         self.outBuf = FQueue() 
+        self.isWorking = True 
 
         self.netIn = netId
         self.netOut = netOut
@@ -68,7 +72,11 @@ class UserNode:
         data = self.get_from_out_buf()
         while data:
             u, msg = data
-            self.userNodes[u.id].put_to_in_buf(self.timer.cur_time(), u, msg) 
+            x1 = self.userNodes[u.id].x
+            y1 = self.userNodes[u.id].y
+            delay = Util.delay(x, y, x1, y1) 
+            #ASSERTION: cur_time() should be in milli-seconds
+            self.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, u, msg) 
             data = self.get_from_out_buf()
             
 
@@ -109,3 +117,9 @@ class UserNode:
         else:
             return None
 
+    def rand_fail(self):
+        """
+        1. called by scheduler, when called, has a change to switch between failed and working
+        2. when failed drop all msgs in both inBuf and outBuf
+        """
+        pass

@@ -1,5 +1,6 @@
 import math
 
+#input: coordination, output: distance on earth surface
 def distance(origin, destination):
     lat1, lon1 = origin
     lat2, lon2 = destination
@@ -13,3 +14,8 @@ def distance(origin, destination):
     d = radius * c
 
     return d
+
+#from the sigcomm paper, rought
+def delay(x1, y1, x2, y2):
+    dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    return dist / 50
