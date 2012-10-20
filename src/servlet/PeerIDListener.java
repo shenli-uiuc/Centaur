@@ -26,6 +26,14 @@ public class PeerIDListener extends HttpServlet{
             response.setContentType("text/html");
             PrintWriter toClient = response.getWriter();
             toClient.println(peerID);
+
+            //construct tree structure 
+            //StringBuffer sb = new StringBuffer();
+            //sb.append("(");
+            String tree = String.format("(%s(%s(%s)(%s))(%s(%s)(%s)))", peerID, peerID, peerID, peerID, peerID, peerID, peerID);
+            //call p2p executable
+            
+            ProcessBuilder pb = new ProcessBuilder("path....", tree, "hello hello");
         }
         catch(Exception ex){
             System.out.println("EXCEPTION in experiments: " + ex.getMessage());
