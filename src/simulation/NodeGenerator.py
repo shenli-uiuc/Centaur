@@ -8,8 +8,8 @@ class NodeGenerator:
         while i < nodeNum:
             x = random.random() * size
             y = random.random() * size
-
-            nodePos.append([x, y])
+            #id and coor
+            nodePos.append([i, x, y])
 
             i += 1
 

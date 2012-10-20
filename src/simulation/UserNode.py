@@ -1,5 +1,6 @@
 from MyQueue import PQueue, FQueue
 import Util
+import random
 
 class UserNode:
 
@@ -16,8 +17,6 @@ class UserNode:
 
     #node failing rate
     pFail = 0
-    isWorking = True
-    #TODO: consider the failure
 
     #coordination
     x = 0
@@ -119,7 +118,8 @@ class UserNode:
 
     def rand_fail(self):
         """
-        1. called by scheduler, when called, has a change to switch between failed and working
-        2. when failed drop all msgs in both inBuf and outBuf
+        1. when failed drop all msgs in both inBuf and outBuf
         """
-        pass
+        if random.random() < self.pFail:
+            self.inBuf.clear()
+            self.outBuf.clear()    

@@ -20,6 +20,9 @@ class PQueue:
     def is_empty(self):
         return (len(self.arr) <= 0)
 
+    def clear(self):
+        self.arr = []
+
 
 class FQueue:
     q = None
@@ -38,6 +41,9 @@ class FQueue:
 
     def is_empty(self):
         return len(self.q) <= 0
+
+    def clear(self):
+        self.q.clear()
 
 #testing
 def main():

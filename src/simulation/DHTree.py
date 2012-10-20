@@ -25,11 +25,9 @@ class DHTree:
         self._init_vertices(coors)
 
     def _init_vertices(self, coors):
-        cnt = 0
         for coor in coors:
-            curV = Vertex(cnt, coor[0], coor[1])
+            curV = Vertex(coor[0], coor[1], coor[2])
             self.V.append(curV)
-            cnt += 1
 
     def _init_tree_sizes(self):
         for i in range(self.h + 1):

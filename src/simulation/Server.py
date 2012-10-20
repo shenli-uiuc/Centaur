@@ -1,7 +1,19 @@
 from MyQueue import FQueue, PQueue
+import random
 
 class Server:
     
+    inBuf = None
+    outBuf = None
+
+    userSet = None
+
+    def __init__(self):
+        pass
+
+    def _init_folower_set(self):
+        pass 
+
     #unified interface for the scheduler to call
     def receive(self):
         """
@@ -19,6 +31,11 @@ class Server:
         """
         pass
 
+    """
+    inBuf data fields:
+    1. follower num
+    2. msg len
+    """
     def get_from_in_buf(self):
         pass
 
