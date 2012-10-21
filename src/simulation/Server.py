@@ -1,18 +1,49 @@
 from MyQueue import FQueue, PQueue
 import random
 
+import UserNode
+import Util
+
 class Server:
     
     inBuf = None
     outBuf = None
 
-    userSet = None
+    #10GB incoming outgoing network bandwidth
+    netIn = 10 * 1024 * 1024 * 1024  
+    netout = netIn
 
-    def __init__(self):
-        pass
+    #10KB user incoming and outgoing network bandwidh
+    userNetIn = 10 * 1024
+    userNetOut = userNetIn
+    userPFail = 0.05
+
+    userNodes = None
+    userNum = 0 
+
+    coor_file = "../../data/coors"
+
+    sharedStat = None
+    timer = None
+
+    def __init__(self, timer):
+        self.userNodes = []
+        self.sharedStat = {}
+        self.sharedStat['userNodes'] = self.userNodes
+        self.sharedStat['timer'] = self.timer
 
     def _init_folower_set(self):
-        pass 
+        f = open(coor_file, 'r')
+        cnt = 0
+        for line in f:
+            items = line.split(', ')
+            latitude = float(items[0])
+            longitude = float(items[1])
+            user = UserNode(self.userNetIn, self.userNetOut, self.userPFail, self.sharedStat, cnt, longitude, latitude)
+            self.userNodes.append(user)
+            cnt += 1
+        f.close()
+        self.userNum = len(self.userNodes)
 
     #unified interface for the scheduler to call
     def receive(self):
@@ -49,8 +80,13 @@ class Server:
     def put_to_in_buf(self, u, msg):
         pass 
 
-    def get_followers(self, folNum):
-        #given the number of followers, randomly generate the online follower set 
-        pass
+    def _get_followers(self, num):
+        #given the number of living followers, randomly generate the online follower set 
+        folSet = []
+        while num > 0:
+            id = random.randint(0, self.userNum - 1)
+            folSet.append(id)
+            num -=1 
+        return folSet
 
      

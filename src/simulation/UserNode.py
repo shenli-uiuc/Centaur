@@ -39,8 +39,8 @@ class UserNode:
         self.netIn = netId
         self.netOut = netOut
         self.pFail = pFail
-        self.userNodes = sharedStat.userNodes
-        self.timer = sharedStat.timer
+        self.userNodes = sharedStat['userNodes']
+        self.timer = sharedStat['timer']
         self.id = id
         self.x = x
         self.y = y
