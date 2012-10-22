@@ -3,14 +3,14 @@ class Timer:
     t = 0
 
     def __init__(self):
-        t = 0
+        self.t = 0
 
     def cur_time(self):
-        return t
+        return self.t
 
     def inc_time(self):
-        t += 1
+        self.t += 1
 
     def inc_time_by(self, sec):
-        t += sec
+        self.t += sec
         

@@ -7,10 +7,11 @@ class TweetGen:
     tweetFile = None
 
     nextTweet = None
+    isDone = False
 
     def __init__(self, timer):
         self.timer = timer
-        self.tweetFile = open(tweetFilePath, 'r')
+        self.tweetFile = open(self.tweetFilePath, 'r')
 
     def next(self):
         if not self.has_next():
@@ -23,7 +24,10 @@ class TweetGen:
     def has_next(self):
         if not self.nextTweet:
             line = self.tweetFile.readline()
-            items.split(',')
+            if not line:
+                self.isDone = True
+                return False
+            items = line.split(',')
             timestamp = int(items[0])
             folNum = int(items[1])
             msgLen = int(items[2]) 
@@ -34,6 +38,9 @@ class TweetGen:
         else:
             return True
 
+    def is_done(self):
+        return self.isDone        
+
     def close(self):
-        if self.tweetFile.close()
+        if self.tweetFile:
             self.tweetFile.close()

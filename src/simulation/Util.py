@@ -25,7 +25,6 @@ def delay(x1, y1, x2, y2):
 
 #translate latitude and longitude to 2D coordinations
 def loc2coor(latitude, longitude):
-    print (latitude, longitude)
     x = (((longitude + 180) * width)/360) % width
     y = height / 2 - math.log( math.tan((latitude+90) * math.pi /360) )*width/(2* math.pi)
     return (x, y)

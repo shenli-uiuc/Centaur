@@ -21,7 +21,7 @@ class Server:
 
     #10GB incoming outgoing network bandwidth
     netIn = 10 * 1024 * 1024 * 1024  
-    netout = netIn
+    netOut = netIn
 
     liveProb = 0.05
 
@@ -29,6 +29,13 @@ class Server:
     userNetIn = 10 * 1024
     userNetOut = userNetIn
     userPFail = 0.05
+
+    #for tree partition 
+    userAngle = math.pi / 6
+    angle = math.pi
+    # (d, h) = (4, 5) lead to at most 340 descendant
+    d = 4
+    h = 5
 
     userNodes = None
     userNum = 0 
@@ -84,7 +91,7 @@ class Server:
             folNum = math.ceil(self.liveProb * folNum)
             #we do not need to count the incoming traffic, as it gonna be the same with or without Centuar
             folSet = self._get_followers(folNum)
-            folSet.insert(0, [self.id, self.x, self,y])
+            folSet.insert(0, [self.id, self.x, self.y])
             tree = DHTree(folSet)
             r = tree.get_tree(self.userAngle, self.angle, self.d, self.h)
             for u in r.cList:
@@ -116,7 +123,11 @@ class Server:
     """
     def get_from_in_buf(self):
         # we consider the msg as the entire json string
-        folNum, msgLen = self.inBuf.peek()
+        data = self.inBuf.peek()
+        if not data:
+            #inBuf is empty
+            return None
+        folNum, msgLen = data
         if msgLen > self.accIn:
             return None
         else:
@@ -128,7 +139,11 @@ class Server:
         self.inBuf.push((folNum, msgLen)) 
 
     def get_from_out_buf(self):
-        u, msgLen = self.outBuf.peek()
+        data = self.outBuf.peek()
+        if not data:
+            #outBuf is empty
+            return None
+        u, msgLen = data
         size = u.subTreeSize + msgLen
         if size < self.accOut:
             return None

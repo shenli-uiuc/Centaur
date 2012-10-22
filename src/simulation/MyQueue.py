@@ -17,6 +17,8 @@ class PQueue:
         return d
 
     def peek(self):
+        if self.is_empty():
+            return None
         return self.arr[0]
 
     def is_empty(self):
@@ -41,6 +43,8 @@ class FQueue:
         return self.q.popleft()
 
     def peek(self):
+        if self.is_empty():
+            return None
         return self.q[0]
 
     def is_empty(self):

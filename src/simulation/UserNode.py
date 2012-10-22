@@ -86,8 +86,11 @@ class UserNode:
         """
         get one package from the inBuf if both cpu and network contraints allows
         """
+        data = self.inBuf.peek()
+        if not data:
+            return None
         #the data should be (subtree, msg) pair
-        timestamp, (u, msgLen) = self.inBuf.peek()
+        timestamp, (u, msgLen) = data
         size = u.subTreeSize + msgLen
         if self.timer.cur_time() > timestamp and size <= self.accIn:
             self.accIn -= size
@@ -109,7 +112,10 @@ class UserNode:
 
     #should be called by function send
     def get_from_out_buf(self):
-        u, msgLen = self.outBuf.peek()
+        data = self.outBuf.peek()
+        if not data:
+            return None
+        u, msgLen = data
         size = u.subTreeSize + msgLen
         if size <= self.accOut:
             self.accOut -= size
@@ -117,6 +123,12 @@ class UserNode:
             return (u, msgLen)
         else:
             return None
+
+    def is_done(self):
+        if self.inBuf.is_empty() and self.outBuf.is_empty():
+            return True
+        else:
+            return False
 
     def rand_fail(self):
         """
