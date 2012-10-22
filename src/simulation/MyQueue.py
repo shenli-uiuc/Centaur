@@ -11,6 +11,8 @@ class PQueue:
         heapq.heappush(self.arr, (pri, d))
 
     def pop(self):
+        if self.is_empty():
+            return None
         pri, d = heapq.heappop(self.arr)
         return d
 
@@ -34,6 +36,8 @@ class FQueue:
         self.q.append(data)
 
     def pop(self):
+        if self.is_empty():
+            return None
         return self.q.popleft()
 
     def peek(self):

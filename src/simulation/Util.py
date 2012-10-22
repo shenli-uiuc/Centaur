@@ -1,5 +1,8 @@
 import math
 
+width = 24902.0
+height = 24860.0
+
 #input: coordination, output: distance on earth surface
 def distance(origin, destination):
     lat1, lon1 = origin
@@ -19,3 +22,10 @@ def distance(origin, destination):
 def delay(x1, y1, x2, y2):
     dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
     return dist / 50
+
+#translate latitude and longitude to 2D coordinations
+def loc2coor(latitude, longitude):
+    print (latitude, longitude)
+    x = (((longitude + 180) * width)/360) % width
+    y = height / 2 - math.log( math.tan((latitude+90) * math.pi /360) )*width/(2* math.pi)
+    return (x, y)

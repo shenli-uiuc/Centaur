@@ -1,0 +1,14 @@
+I gonna simulate 4 scenarios:
+1. optimal: assumes the server has unlimited resources
+2. current: server has bounded resources and it does all the message delivery
+3. p2p: (piece size is a trade off)server cut the follower set into different pieces and pick one user to do the msg delivery in each piece
+4. Centuar: (redundancy trade off)
+
+stats:
+1. msg delivery delay: we need a timestamp append at each package
+2. msg missing rate: keep a follower set for each msg, delete the follower set which is older than T time units
+3. user load balancing: (a) msg * follower (b) network
+4. server traffic (this should only applies to Centuar)
+
+
+Shen Li

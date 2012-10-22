@@ -14,7 +14,10 @@ class DHTree:
 
     d = 0
     h = 0
+    #alpha is the partition angle used by users
     alpha = 0
+    #beta is the partition angle used by server. As for some publisher, the online follower set is very mall, the server might need a large angle to take advantage of multicasting.
+    beta = 0;
     V = None
     treeSizes = None
 
@@ -205,10 +208,12 @@ class DHTree:
 
 
 class Vertex:
+    #the id field maps to the global node id, rather the index in V
     id = 0
     x = 0
     y = 0
     angle = 0
+    #cList stores the Vertex object instance
     cList = []
     used = False
     subTreeSize = 0
@@ -227,7 +232,7 @@ class Vertex:
 
     def print_edges(self):
         for i in self.cList:
-            print '%d %d'%(self.id, i)
+            print '%d %d'%(self.id, i.id)
 
 def main():
     nodeGenerator = NodeGenerator()
