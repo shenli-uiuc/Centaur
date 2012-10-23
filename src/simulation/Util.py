@@ -1,7 +1,7 @@
 import math
 
-width = 24902.0
-height = 24860.0
+width = 40076
+height = 40009
 
 #input: coordination, output: distance on earth surface
 def distance(origin, destination):
@@ -21,7 +21,7 @@ def distance(origin, destination):
 #from the sigcomm paper, rought
 def delay(x1, y1, x2, y2):
     dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-    return dist / 50
+    return dist / (50.0 * 1000.0)
 
 #translate latitude and longitude to 2D coordinations
 def loc2coor(latitude, longitude):

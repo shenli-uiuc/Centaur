@@ -48,13 +48,13 @@ class DHTree:
         return self.V[0]
 
     def build_tree(self, index, r, curH):
-        print (r.id, index)
+        #print (r.id, index)
         r.used = True
         indexLen = len(index)  
         r.subTreeSize = indexLen      
 
         #we are not enforcing the DHTree to stay lower than self.h by using the curH parameter (the previous implementation still uses curH parameter because there might be used nodes in the index list)
-        print ("see tree size:", indexLen, curH, self.treeSizes[curH-1])
+        #print ("see tree size:", indexLen, curH, self.treeSizes[curH-1])
         """
         The first condition guarantees that even if the number of receivers is small, the data center will also take advantage of the multicasting
         """
@@ -65,7 +65,7 @@ class DHTree:
                     print "WRONG: why used!?"
                 self.V[index[i]].used = True
                 r.cList.append(self.V[index[i]])
-                self.print_info(r, self.V[index[i]], 0)
+                #self.print_info(r, self.V[index[i]], 0)
             return
 
         if curH == self.h:
@@ -101,7 +101,7 @@ class DHTree:
             in both case we should remember the index in the index array, so that we can do the swap latter 
             """
             if u.angle-tmpAngle > alpha or cnt > self.treeSizes[curH - 1]:
-                print (u.angle, tmpAngle, alpha, cnt, self.treeSizes[curH - 1], curH, i, indexLen)
+                #print (u.angle, tmpAngle, alpha, cnt, self.treeSizes[curH - 1], curH, i, indexLen)
                 if curH == self.h:
                     cvi = random.randint(0, len(curIndex) - 1)   
 

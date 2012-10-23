@@ -23,6 +23,10 @@ class Server:
     netIn = 10 * 1024 * 1024 * 1024  
     netOut = netIn
 
+    #keep current server in/out bandwidth
+    curNetIn = 0
+    curNetOut = 0
+
     liveProb = 0.05
 
     #10KB user incoming and outgoing network bandwidh
@@ -40,7 +44,7 @@ class Server:
     userNodes = None
     userNum = 0 
 
-    coor_file = "../../data/vcoors"
+    coor_file = "../../data/small_coors"
 
     sharedStat = None
     timer = None
@@ -50,6 +54,8 @@ class Server:
     accOut = 0
 
     def __init__(self, timer):
+        self.timer = timer
+
         self.userNodes = []
         self.sharedStat = {}
         self.sharedStat['userNodes'] = self.userNodes
@@ -85,9 +91,10 @@ class Server:
         2. read from inBuf, compute the DHTree and put msgs into outBuf
         """
         self.accIn += self.netIn
+        self.curNetIn = 0
         data = self.get_from_in_buf()
         while data:
-            folNum, msgLen = data
+            timestamp, folNum, msgLen = data
             folNum = math.ceil(self.liveProb * folNum)
             #we do not need to count the incoming traffic, as it gonna be the same with or without Centuar
             folSet = self._get_followers(folNum)
@@ -95,7 +102,7 @@ class Server:
             tree = DHTree(folSet)
             r = tree.get_tree(self.userAngle, self.angle, self.d, self.h)
             for u in r.cList:
-                self.put_to_out_buf(u, msgLen)
+                self.put_to_out_buf(timestamp, u, msgLen)
             data = self.get_from_in_buf()
  
     
@@ -107,13 +114,14 @@ class Server:
         4. do the redundency
         """
         self.accOut += self.netOut
+        self.curNetOut = 0
         data = self.get_from_out_buf()
         while data:
-            u, msgLen = data
+            timestamp, u, msgLen = data
             x1 = self.userNodes[u.id].x
             y1 = self.userNodes[u.id].y
             delay = Util.delay(self.x, self.y, x1, y1)
-            sefl.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, u, msgLen)
+            self.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, timestamp, u, msgLen)
             data = self.get_from_out_buf()
 
     """
@@ -127,32 +135,38 @@ class Server:
         if not data:
             #inBuf is empty
             return None
-        folNum, msgLen = data
+        timestamp, folNum, msgLen = data
         if msgLen > self.accIn:
             return None
         else:
             self.accIn -= msgLen
+            self.curNetIn += msgLen
             return self.inBuf.pop()
 
     #folNum is used to determin the number of subscribers for this msg
-    def put_to_in_buf(self, folNum, msgLen):
-        self.inBuf.push((folNum, msgLen)) 
+    def put_to_in_buf(self, timestamp, folNum, msgLen):
+        self.inBuf.push((timestamp, folNum, msgLen)) 
 
     def get_from_out_buf(self):
         data = self.outBuf.peek()
         if not data:
             #outBuf is empty
             return None
-        u, msgLen = data
-        size = u.subTreeSize + msgLen
-        if size < self.accOut:
+        timestamp, u, msgLen = data
+        #id takes 8 bytes, in real case it might need more: ip, and other info. TODO: see what is required to start an connection
+        size = u.subTreeSize * 8 + msgLen
+        if size > self.accOut:
             return None
         else:
             self.accOut -= size 
+            self.curNetOut += size
             return self.outBuf.pop()
 
-    def put_to_out_buf(self, u, msgLen):
-        self.outBuf.push((u,msgLen))
+    def get_cur_net_stat(self):
+        return (self.curNetIn, self.curNetOut)
+
+    def put_to_out_buf(self, timestamp, u, msgLen):
+        self.outBuf.push((timestamp, u, msgLen))
 
     def _get_followers(self, num):
         #given the number of living followers, randomly generate the online follower set 
