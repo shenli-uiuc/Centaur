@@ -1,0 +1,13 @@
+Metadata-Version: 1.1
+Name: rbtree
+Version: 0.9.0
+Summary: A red black tree with extended iterator
+    support.
+Home-page: http://bitbucket.org/bcsaller/rbtree/
+Author: Benjamin Saller
+Author-email: bcsaller@gmail.com
+License: GPL 3
+Download-URL: http://bitbucket.org/bcsaller/rbtree/
+Description: UNKNOWN
+Keywords: rbtree red-black tree data-structure
+Platform: UNKNOWN

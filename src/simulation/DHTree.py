@@ -208,6 +208,7 @@ class DHTree:
 
 
 class Vertex:
+    NODE_SIZE_IN_MEM = 20 #the bytes required to keep one node when transmission
     #the id field maps to the global node id, rather the index in V
     id = 0
     x = 0

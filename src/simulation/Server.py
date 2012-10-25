@@ -4,7 +4,7 @@ import random
 from MyQueue import FQueue, PQueue
 from UserNode import UserNode
 import Util
-from DHTree import DHTree
+from DHTree import DHTree, Vertex
 from Timer import Timer
 
 class Server:
@@ -27,7 +27,9 @@ class Server:
     curNetIn = 0
     curNetOut = 0
 
-    liveProb = 0.05
+    sbNetOut = 0 #server broadcast net out
+
+    liveProb = 0.1
 
     #10KB user incoming and outgoing network bandwidh
     userNetIn = 10 * 1024
@@ -53,6 +55,10 @@ class Server:
     accIn = 0
     accOut = 0
 
+    #msg missing rate
+    msgRecExpCnt = 0
+    REDUNDANCY = 3
+
     def __init__(self, timer):
         self.timer = timer
 
@@ -74,7 +80,7 @@ class Server:
             latitude = float(items[0])
             longitude = float(items[1])
             x, y = Util.loc2coor(latitude, longitude)
-            user = UserNode(self.userNetIn, self.userNetOut, self.userPFail, self.sharedStat, cnt, longitude, latitude)
+            user = UserNode(self.userNetIn, self.userNetOut, self.userPFail, self.sharedStat, cnt, x, y)
             self.userNodes.append(user)
             cnt += 1
         f.close()
@@ -92,17 +98,22 @@ class Server:
         """
         self.accIn += self.netIn
         self.curNetIn = 0
+        self.sbNetOut = 0
         data = self.get_from_in_buf()
+        self.msgRecExpCnt = 0
         while data:
-            timestamp, folNum, msgLen = data
+            timestamp, msgID, folNum, msgLen = data
             folNum = math.ceil(self.liveProb * folNum)
             #we do not need to count the incoming traffic, as it gonna be the same with or without Centuar
-            folSet = self._get_followers(folNum)
+            uniqCnt, folSet = self._get_followers(folNum)
+            self.msgRecExpCnt += uniqCnt
             folSet.insert(0, [self.id, self.x, self.y])
-            tree = DHTree(folSet)
-            r = tree.get_tree(self.userAngle, self.angle, self.d, self.h)
-            for u in r.cList:
-                self.put_to_out_buf(timestamp, u, msgLen)
+            self.sbNetOut += (folNum * (Vertex.NODE_SIZE_IN_MEM + msgLen))
+            for i in range(self.REDUNDANCY):
+                tree = DHTree(folSet)
+                r = tree.get_tree(self.userAngle, self.angle, self.d, self.h)
+                for u in r.cList:
+                    self.put_to_out_buf(timestamp, msgID, u, msgLen)
             data = self.get_from_in_buf()
  
     
@@ -117,11 +128,11 @@ class Server:
         self.curNetOut = 0
         data = self.get_from_out_buf()
         while data:
-            timestamp, u, msgLen = data
+            timestamp, msgID, u, msgLen = data
             x1 = self.userNodes[u.id].x
             y1 = self.userNodes[u.id].y
             delay = Util.delay(self.x, self.y, x1, y1)
-            self.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, timestamp, u, msgLen)
+            self.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, timestamp, msgID, u, msgLen)
             data = self.get_from_out_buf()
 
     """
@@ -135,7 +146,7 @@ class Server:
         if not data:
             #inBuf is empty
             return None
-        timestamp, folNum, msgLen = data
+        timestamp, msgID, folNum, msgLen = data
         if msgLen > self.accIn:
             return None
         else:
@@ -144,17 +155,17 @@ class Server:
             return self.inBuf.pop()
 
     #folNum is used to determin the number of subscribers for this msg
-    def put_to_in_buf(self, timestamp, folNum, msgLen):
-        self.inBuf.push((timestamp, folNum, msgLen)) 
+    def put_to_in_buf(self, timestamp, msgID, folNum, msgLen):
+        self.inBuf.push((timestamp, msgID, folNum, msgLen)) 
 
     def get_from_out_buf(self):
         data = self.outBuf.peek()
         if not data:
             #outBuf is empty
             return None
-        timestamp, u, msgLen = data
+        timestamp, msgID, u, msgLen = data
         #id takes 8 bytes, in real case it might need more: ip, and other info. TODO: see what is required to start an connection
-        size = u.subTreeSize * 8 + msgLen
+        size = u.subTreeSize * u.NODE_SIZE_IN_MEM + msgLen
         if size > self.accOut:
             return None
         else:
@@ -163,19 +174,24 @@ class Server:
             return self.outBuf.pop()
 
     def get_cur_net_stat(self):
-        return (self.curNetIn, self.curNetOut)
+        return (self.curNetIn, self.curNetOut, self.sbNetOut)
 
-    def put_to_out_buf(self, timestamp, u, msgLen):
-        self.outBuf.push((timestamp, u, msgLen))
+    def get_msg_rec_exp_cnt(self):
+        return self.msgRecExpCnt
+
+    def put_to_out_buf(self, timestamp, msgID, u, msgLen):
+        self.outBuf.push((timestamp, msgID, u, msgLen))
 
     def _get_followers(self, num):
         #given the number of living followers, randomly generate the online follower set 
         folSet = []
+        uniqueSet = set()
         while num > 0:
             id = random.randint(0, self.userNum - 1)
+            uniqueSet.add(id)
             folSet.append([id, self.userNodes[id].x, self.userNodes[id].y])
             num -=1 
-        return folSet
+        return (len(uniqueSet), folSet)
 
     
 

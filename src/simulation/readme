@@ -5,8 +5,8 @@ I gonna simulate 4 scenarios:
 4. Centuar: (redundancy trade off)
 
 stats:
-1. msg delivery delay: we need a timestamp append at each package
-2. msg missing rate: keep a follower set for each msg, delete the follower set which is older than T time units
+1. msg delivery delay: we need a timestamp append at each package ---- done
+2. msg missing rate: keep a follower set for each msg, delete the follower set which is older than T time units ---- done
 3. user load balancing: (a) msg * follower (b) network    ----  half done (need all 0.3M user traffic to plot the cdf)
 4. server traffic (this should only applies to Centuar)  ---- done
 
