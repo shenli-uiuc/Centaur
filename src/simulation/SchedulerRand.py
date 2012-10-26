@@ -182,6 +182,7 @@ class Scheduler:
         i = 0
         while i < self.userNodeNum:
             f.write("%f,%f\n"%(self.userAccNetIn[i], self.userAccNetOut[i]))
+            i += 1
         f.close()
 
     def log_user_net(self, userNetIn, userNetOut):

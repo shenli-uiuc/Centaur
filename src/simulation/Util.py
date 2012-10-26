@@ -1,11 +1,11 @@
 import math
 
-width = 40076
-height = 40009
-maxDist = math.sqrt(width ** 2 + height ** 2)
+width = 40076.0
+height = 40009.0
+maxDist = 43000.0
 
-maxNet = 100 * 1024
-minNet = 1 * 1024
+maxNet = 10 * 1024
+minNet = 128
 
 #input: coordination, output: distance on earth surface
 def distance(origin, destination):
@@ -29,7 +29,10 @@ def delay(x1, y1, x2, y2):
 
 def net(x1, y1, x2, y2):
     dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-    net = (maxNet - minNet) * (maxDist - dist) / maxDist  + minNet
+    if dist > maxDist:
+        return minNet
+    return maxNet - maxNet * math.sqrt(dist/maxDist)
+
 
 #translate latitude and longitude to 2D coordinations
 def loc2coor(latitude, longitude):

@@ -115,6 +115,8 @@ class UserNode:
             x1 = self.userNodes[u.id].x
             y1 = self.userNodes[u.id].y
             delay = Util.delay(self.x, self.y, x1, y1)
+            net = Util.net(self.x, self.y, x1, y1)
+            delay += ((u.subTreeSize + msgLen ) / net )
             #print ("send delay", delay)
             #print (self.x, self.y, x1, y1, delay)
             #ASSERTION: cur_time() should be in seconds (float)

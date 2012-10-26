@@ -8,6 +8,7 @@ from DHTree import DHTree, Vertex
 from Timer import Timer
 
 class Server:
+    SAMPLE_RATE = 0.5
    
     id = 0 
     inBuf = None
@@ -40,8 +41,8 @@ class Server:
     userAngle = math.pi / 6
     angle = math.pi
     # (d, h) = (4, 5) lead to at most 340 descendant
-    d = 4
-    h = 5
+    d = 2
+    h = 8
 
     userNodes = None
     userNum = 0 
@@ -132,6 +133,8 @@ class Server:
             x1 = self.userNodes[u.id].x
             y1 = self.userNodes[u.id].y
             delay = Util.delay(self.x, self.y, x1, y1)
+            net = Util.net(self.x, self.y, x1, y1)
+            delay += ((u.subTreeSize + msgLen ) / net )
             self.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, timestamp, msgID, u, msgLen)
             data = self.get_from_out_buf()
 
