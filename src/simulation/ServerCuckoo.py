@@ -48,6 +48,7 @@ class Server:
 
     userNodes = None
     userNum = 0 
+    userIDs = None
 
     coor_file = "../../data/small_coors"
 
@@ -89,6 +90,7 @@ class Server:
             cnt += 1
         f.close()
         self.userNum = cnt
+        print "**"
         self.userIDs = range(self.userNum)
         self.id = cnt
 
@@ -108,14 +110,14 @@ class Server:
         self.msgRecExpCnt = 0
         while data:
             timestamp, msgID, folNum, msgLen = data
-            folNum = math.ceil(self.liveProb * folNum)
+            folNum = int(math.ceil(self.liveProb * folNum))
             #we do not need to count the incoming traffic, as it gonna be the same with or without Centuar
             uniq, peerIDs = self._get_follower_ids(folNum)
             senderID = random.randint(0, self.userNum - 1)
             if folNum < self.P2P_TH:
                 self.userNodes[senderID].store_msg_peer(msgID, peerIDs)
             else:
-                gossipNum = math.ceil(math.log(folNum))
+                gossipNum = int(math.ceil(math.log(folNum)))
                 for peer in peerIDs:
                     self.notify_msg_peer(peer, msgID, peerIDs, gossipNum)
 
@@ -154,25 +156,9 @@ class Server:
     def notify_msg_peer(self, userID, msgID, folSet, size):
         #pick size users form folSet, and send the (msgID, list) to userID
         peerList = random.sample(folSet, size)
-        while size > 0:
-            id = random.choice(folSet)
-            peerList.append(id)
-            size -= 1
-            
         self.userNodes[userID].store_msg_peer(msgID, peerList) 
 
     def _get_follower_ids(self, num):
-        folSet = []
-        uniqueSet = set()
-        while num > 0:
-            id = random.randint(0, self.userNum - 1)
-            uniqueSet.add(id)
-            folSet.append(id)
-            num -= 1
-        return (len(uniqueSet), folSet)
-
-    def _get_followers(self, num):
-        #given the number of living followers, randomly generate the online follower set 
         if num < self.userNum:
             return (num, random.sample(self.userIDs, num))
         folSet = []
@@ -180,8 +166,8 @@ class Server:
         while num > 0:
             id = random.randint(0, self.userNum - 1)
             uniqueSet.add(id)
-            folSet.append([id, self.userNodes[id].x, self.userNodes[id].y])
-            num -=1 
+            folSet.append(id)
+            num -= 1
         return (len(uniqueSet), folSet)
 
     
