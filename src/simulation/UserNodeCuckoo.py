@@ -47,7 +47,7 @@ class UserNode:
     accNetDelay = 0
 
     #msgDelayStat
-    DELAY_SLOT_NUM = 10
+    DELAY_SLOT_NUM = 200
     delayIndex = 0
     delayCnt = 0
     delayRoll = None
@@ -82,8 +82,6 @@ class UserNode:
             self.msgPeerDict[msgID].extend(peerList)
         else:
             self.msgPeerDict[msgID] = peerList
-        if len(self.msgPeerDict) > self.MSG_PEER_LEN:
-            self.msgPeerDict.pop()
 
     def report_delay(self, delay):
         self.delayCnt = min(self.delayCnt + 1, self.DELAY_SLOT_NUM)

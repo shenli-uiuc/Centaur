@@ -133,8 +133,8 @@ class Server:
             x1 = self.userNodes[u.id].x
             y1 = self.userNodes[u.id].y
             delay = Util.delay(self.x, self.y, x1, y1)
-            net = Util.net(self.x, self.y, x1, y1)
-            delay += ((u.subTreeSize + msgLen ) / net )
+            #net = Util.net(self.x, self.y, x1, y1)
+            #delay += ((u.subTreeSize + msgLen ) / net )
             self.userNodes[u.id].put_to_in_buf(self.timer.cur_time() + delay, timestamp, msgID, u, msgLen)
             data = self.get_from_out_buf()
 

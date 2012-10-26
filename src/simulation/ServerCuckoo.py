@@ -89,6 +89,7 @@ class Server:
             cnt += 1
         f.close()
         self.userNum = cnt
+        self.userIDs = range(self.userNum)
         self.id = cnt
 
     def get_user_nodes(self):
@@ -152,7 +153,7 @@ class Server:
 
     def notify_msg_peer(self, userID, msgID, folSet, size):
         #pick size users form folSet, and send the (msgID, list) to userID
-        peerList = []
+        peerList = random.sample(folSet, size)
         while size > 0:
             id = random.choice(folSet)
             peerList.append(id)
@@ -172,6 +173,8 @@ class Server:
 
     def _get_followers(self, num):
         #given the number of living followers, randomly generate the online follower set 
+        if num < self.userNum:
+            return (num, random.sample(self.userIDs, num))
         folSet = []
         uniqueSet = set()
         while num > 0:
