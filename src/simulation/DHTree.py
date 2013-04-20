@@ -2,10 +2,10 @@ from NodeGenerator import NodeGenerator
 import math
 import random
 
-try:
-    import json
-except ImportError, e:
-    import simplejson as json
+#try:
+#    import json
+#except ImportError, e:
+#    import simplejson as json
 
 #TODO: give Vertex a real id, rather than a count
 class DHTree:

@@ -4,7 +4,7 @@ width = 40076.0
 height = 40009.0
 maxDist = 43000.0
 
-maxNet = 10 * 1024
+maxNet = 5 * 1024
 minNet = 128
 
 #input: coordination, output: distance on earth surface

@@ -8,11 +8,11 @@ from MyQueue import PQueue
 
 class Scheduler:
     ONE_MINUTE = 60
-    EXP_LEN = 120 # in minutes
+    EXP_LEN = 240 # in minutes
     INFTY = 9999999
 
-    userNetLogFileName = "cuckoo_user_net.log"
-    logFileName = "cuckoo_all.log"
+    userNetLogFileName = "cuckoo_user_net_lp_5_highload_static.log"
+    logFileName = "cuckoo_all_lp_5_highload_static.log"
 
     timer = None
     tweetGen = None
@@ -95,8 +95,8 @@ class Scheduler:
         for user in self.userNodes:
             self.msgRecCnt += user.get_new_msg_count()
 
-        #for user in self.userNodes:
-        #    user.rand_fail()
+        for user in self.userNodes:
+            user.rand_fail()
 
     def simulate(self):
         cnt = 0
@@ -145,12 +145,11 @@ class Scheduler:
                     outS += self.userCurNetOut[i]
                     outS2 += (self.userCurNetOut[i] ** 2)
 
-                    data = self.userNodes[i].get_delay()
-                    if data:
-                        maxDelay, averDelay = data
-                        delayMin = min(delayMin, averDelay)
-                        delayMax = max(delayMax, maxDelay)
-                        delayS += averDelay 
+                    delay = self.userNodes[i].get_delay()
+                    if delay:
+                        delayMin = min(delayMin, delay)
+                        delayMax = max(delayMax, delay)
+                        delayS += delay
                         userCnt += 1
 
                     i += 1

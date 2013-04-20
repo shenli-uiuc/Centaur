@@ -9,11 +9,11 @@ from MyQueue import PQueue
 
 class Scheduler:
     ONE_MINUTE = 60
-    EXP_LEN = 120 # in minutes
+    EXP_LEN = 240 # in minutes
     INFTY = 9999999
 
-    userNetLogFileName = "rand_user_net.log"
-    logFileName = "rand_all.log"
+    userNetLogFileName = "rand_user_net_lp_5_highload_2_10.log"
+    logFileName = "rand_all_lp_5_highload_2_10.log"
 
     timer = None
     tweetGen = None

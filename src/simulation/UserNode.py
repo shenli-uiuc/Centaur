@@ -43,6 +43,7 @@ class UserNode:
     delayIndex = 0
     delayCnt = 0
     delayRoll = None
+    maxDelay = 0
 
     #msg missing rate stat
     msgCount = None
@@ -65,16 +66,17 @@ class UserNode:
         self.y = y
 
     def report_delay(self, delay):
-        self.delayCnt = min(self.delayCnt + 1, self.DELAY_SLOT_NUM)
+        #self.delayCnt = min(self.delayCnt + 1, self.DELAY_SLOT_NUM)
         #print ("user delay: ", delay)
-        self.delayRoll[self.delayIndex] = delay
-        self.delayIndex = (self.delayIndex + 1) % self.DELAY_SLOT_NUM
+        #self.delayRoll[self.delayIndex] = delay
+        #self.delayIndex = (self.delayIndex + 1) % self.DELAY_SLOT_NUM
+        if self.maxDelay < delay:
+            self.maxDelay = delay
 
     def get_delay(self):
-        if self.delayCnt <=0:
-            return None
-        else:
-            return float(sum(self.delayRoll)) / self.delayCnt
+        tmpDelay = self.maxDelay
+        self.maxDelay = 0
+        return tmpDelay
 
     def receive(self):
         """
@@ -86,6 +88,7 @@ class UserNode:
         self.curNetIn = 0        
         self.accNetDelay = max(0, self.accNetDelay - 1)
         self.newMsgCount = 0
+        self.maxDelay = 0
 
         data = self.get_from_in_buf()
         while data:

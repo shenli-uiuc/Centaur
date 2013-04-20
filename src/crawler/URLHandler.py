@@ -27,6 +27,10 @@ class URLHandler:
                 return res
             except urllib2.HTTPError, e:
                 print ("In URLHandler.open_url: HTTPError", e.code, e.strerror, e.message)
+                if e.code == 401: #unauthorized
+                    return None
+                elif e.code == 404: #user does not exist
+                    return None
                 if self.rateLimitError == e.code:
                     self.rateLimit.check()    
                 count = count + 1

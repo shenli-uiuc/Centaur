@@ -8,7 +8,7 @@ from DHTree import DHTree, Vertex
 from Timer import Timer
 
 class Server:
-    SAMPLE_RATE = 0.5
+    SAMPLE_RATE = 0.1
 
     P2P_TH = 20
    
@@ -32,12 +32,12 @@ class Server:
 
     sbNetOut = 0 #server broadcast net out
 
-    liveProb = 0.1
+    liveProb = 0.05
 
     #10KB user incoming and outgoing network bandwidh
     userNetIn = 10 * 1024
     userNetOut = userNetIn
-    userPFail = 0.05
+    userPFail = 0.01
 
     #for tree partition 
     userAngle = math.pi / 6
@@ -80,7 +80,6 @@ class Server:
         f = open(self.coor_file, 'r')
         cnt = 0
         for line in f:
-
             items = line.split(',')
             latitude = float(items[0])
             longitude = float(items[1])
@@ -111,9 +110,12 @@ class Server:
         while data:
             timestamp, msgID, folNum, msgLen = data
             folNum = int(math.ceil(self.liveProb * folNum))
+            if folNum <= 0:
+                data = self.get_from_in_buf()
+                continue
             #we do not need to count the incoming traffic, as it gonna be the same with or without Centuar
             uniq, peerIDs = self._get_follower_ids(folNum)
-            senderID = random.randint(0, self.userNum - 1)
+            senderID = random.choice(peerIDs)
             if folNum < self.P2P_TH:
                 self.userNodes[senderID].store_msg_peer(msgID, peerIDs)
             else:

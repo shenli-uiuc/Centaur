@@ -22,7 +22,7 @@ class UserNode:
     netOut = 0
 
     #node failing rate
-    pFail = 0
+    pFail = 0.001
 
     #coordination
     x = 0
@@ -30,7 +30,9 @@ class UserNode:
 
     #pending msg peer list: the size should be bounded
     msgPeerDict = None
-    MSG_PEER_LEN = 200
+    #delMsgSet = None
+    MSG_PEER_LEN = 50
+    DEL_MSG_LEN = 500
 
     #an array of receiving packets: priority queue with delay as weight, be careful when maintaining the timestamps
     inBuf = None
@@ -47,10 +49,11 @@ class UserNode:
     accNetDelay = 0
 
     #msgDelayStat
-    DELAY_SLOT_NUM = 200
+    #DELAY_SLOT_NUM = 100
     delayIndex = 0
-    delayCnt = 0
-    delayRoll = None
+    maxDelay = 0
+    #delayCnt = 0
+    #delayRoll = None
 
     #msg missing rate stat
     msgCount = None
@@ -60,16 +63,17 @@ class UserNode:
         self.inBuf = PQueue()
         self.outBuf = FQueue() 
         self.isWorking = True 
-        self.delayRoll = [0] * self.DELAY_SLOT_NUM
+        #self.delayRoll = [0] * self.DELAY_SLOT_NUM
 
         self.msgPeerDict = rbtree.rbtree()
+        #self.delMsgSet = rbtree.rbtree()
 
         self.netIn = netIn
         self.netOut = netOut
         self.pFail = pFail
         self.userNodes = sharedStat['userNodes']
         self.timer = sharedStat['timer']
-        self.msgCount = MsgCounter(self.timer)
+        #self.msgCount = MsgCounter(self.timer)
         self.id = id
         self.x = x
         self.y = y
@@ -78,22 +82,30 @@ class UserNode:
         self.p2pHops = hops
 
     def store_msg_peer(self, msgID, peerList):
+        self.msgPeerDict[msgID] = peerList
+        if len(self.msgPeerDict) > self.MSG_PEER_LEN:
+            #print ("too many entries in msgPeerDict")
+            self.msgPeerDict.pop()
+        
+        while math.fabs(self.msgPeerDict.min()) + 10000 < msgID:
+            #print ("poped", self.msgPeerDict.min())
+            self.msgPeerDict.pop()
+
+    def del_msg(self, msgID):
         if self.msgPeerDict.has_key(msgID):
-            self.msgPeerDict[msgID].extend(peerList)
-        else:
-            self.msgPeerDict[msgID] = peerList
+            del self.msgPeerDict[msgID]
+            #self.delMsgSet[msgID] = None
+            #if len(self.delMsgSet) > self.DEL_MSG_LEN:
+            #    self.delMsgSet.pop()
 
     def report_delay(self, delay):
-        self.delayCnt = min(self.delayCnt + 1, self.DELAY_SLOT_NUM)
-        #print ("user delay: ", delay)
-        self.delayRoll[self.delayIndex] = delay
-        self.delayIndex = (self.delayIndex + 1) % self.DELAY_SLOT_NUM
+        if self.maxDelay < delay:
+            self.maxDelay = delay
 
     def get_delay(self):
-        if self.delayCnt <=0:
-            return None
-        else:
-            return (max(self.delayRoll), float(sum(self.delayRoll)) / self.delayCnt)
+        tmpDelay = self.maxDelay
+        self.maxDelay = 0
+        return tmpDelay
 
     def receive(self):
         """
@@ -105,23 +117,33 @@ class UserNode:
         self.curNetIn = 0        
         self.accNetDelay = max(0, self.accNetDelay - 1)
         self.newMsgCount = 0
+        self.maxDelay = 0
 
         data = self.get_from_in_buf()
         while data:
             prevDelay, (timestamp, msgID, msgLen) = data
             self.report_delay(prevDelay - timestamp)
-            if self.msgCount.report_receive(msgID):
-                self.newMsgCount += 1
+            #if self.msgCount.report_receive(msgID):
+            #    self.newMsgCount += 1
             
             #if not has_key, it means that the user has already received the msg before, or the msg is too old in which case, the entry has been deleted
+
+
             if self.msgPeerDict.has_key(msgID):
+                self.newMsgCount += 1
                 peerList = self.msgPeerDict[msgID]
-                del self.msgPeerDict[msgID] 
+                #self.del_msg(msgID)
+                del self.msgPeerDict[msgID]
                 self.put_to_out_buf(prevDelay, timestamp, msgID, peerList, msgLen)
-            #else:
-            #    print (msgID, "no key" )
+            elif msgID < 0 and self.msgPeerDict.has_key(-msgID):
+                self.newMsgCount += 1
+                peerList = self.msgPeerDict[-msgID]
+                del self.msgPeerDict[-msgID]
+                self.put_to_out_buf(prevDelay, timestamp, msgID, peerList, msgLen)
+            elif msgID < 0:
+                self.newMsgCount += 1
             data = self.get_from_in_buf()
-        self.msgCount.remove_deprecated()
+        #self.msgCount.remove_deprecated()
 
     def send(self):
         """
@@ -143,7 +165,8 @@ class UserNode:
                 net = Util.net(self.x, self.y, x1, y1)
                 delay += (msgLen  / net )
                 #print prevDelay + delay
-                self.userNodes[peerID].put_to_in_buf(prevDelay + delay, timestamp, msgID, msgLen) 
+                self.userNodes[peerID].put_to_in_buf(prevDelay + delay, timestamp, msgID, msgLen)
+            del peerList 
             data = self.get_from_out_buf()
             
 
@@ -206,7 +229,9 @@ class UserNode:
         """
         if random.random() < self.pFail:
             self.inBuf.clear()
-            self.outBuf.clear()   
+            self.outBuf.clear()  
+            self.msgPeerDict.clear()
+            #self.delMsgSet.clear() 
 
     def get_cur_net_stat(self):
         return (self.curNetIn, self.curNetOut) 

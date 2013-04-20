@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app>
+    <servlet>
+        <servlet-name>UserStatus</servlet-name>
+        <servlet-class>centaur.UserStatus</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>UserStatus</servlet-name>
+        <url-pattern>/UserStatus</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DelayReporter</servlet-name>
+        <servlet-class>centaur.DelayReporter</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>DelayReporter</servlet-name>
+        <url-pattern>/DelayReporter</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+

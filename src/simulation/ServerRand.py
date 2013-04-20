@@ -2,7 +2,7 @@ import math
 import random
 
 from MyQueue import FQueue, PQueue
-from UserNode import UserNode
+from UserNodeRand import UserNode
 import Util
 from DHTree import Vertex
 from Timer import Timer
@@ -31,7 +31,7 @@ class Server:
 
     sbNetOut = 0 #server broadcast net out
 
-    liveProb = 0.1
+    liveProb = 0.05
 
     #10KB user incoming and outgoing network bandwidh
     userNetIn = 10 * 1024
@@ -43,7 +43,7 @@ class Server:
     angle = math.pi
     # (d, h) = (4, 5) lead to at most 340 descendant
     d = 2
-    h = 8
+    h = 10
 
     userNodes = None
     userNum = 0 
