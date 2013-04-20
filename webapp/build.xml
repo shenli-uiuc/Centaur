@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<project name = "centaur" default="all" basedir="./">
+    <path id="libs">
+        <fileset dir="WEB-INF/lib/">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name = "clean">
+        <delete dir="WEB-INF/classes"/>
+        <mkdir dir="WEB-INF/classes"/>
+    </target>
+
+    <target name = "all" depends = "clean">
+        <javac srcdir="src/" destdir="WEB-INF/classes" classpathref="libs" includeantruntime="false"/>
+    </target>
+</project>

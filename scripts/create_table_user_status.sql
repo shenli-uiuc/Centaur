@@ -6,6 +6,6 @@ CREATE TABLE user_status(
     latitude DOUBLE,
     longitude DOUBLE, 
 
-    PRIMARY KEY (user_id),
-    INDEX (time)
+    PRIMARY KEY (time),
+    INDEX (user_id)
 )ENGINE=MyISAM CHARACTER SET=binary;

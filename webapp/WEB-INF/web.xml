@@ -2,7 +2,7 @@
 <web-app>
     <servlet>
         <servlet-name>UserStatus</servlet-name>
-        <servlet-class>centaur.UserStatus</servlet-class>
+        <servlet-class>centaurexp.UserStatus</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -12,7 +12,7 @@
 
     <servlet>
         <servlet-name>DelayReporter</servlet-name>
-        <servlet-class>centaur.DelayReporter</servlet-class>
+        <servlet-class>centaurexp.DelayReporter</servlet-class>
     </servlet>
 
     <servlet-mapping>
